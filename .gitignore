@@ -1,0 +1,7 @@
+/vendor/
+.env
+/data/
+/tmp/
+.phpunit.result.cache
+/.phpunit.cache
+/tokens/
