@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
@@ -29,7 +29,6 @@ const BOOLEAN_COLUMNS = [
     'czy_pareto',
     'czy_zmatchowany',
     'zarchiwizowany',
-    'redirect_to',
 ];
 
 const FLOAT_COLUMNS = [
@@ -43,8 +42,6 @@ const FLOAT_COLUMNS = [
 const INTEGER_COLUMNS = [
     'stan_magazynowy',
     'laczna_liczba_sprzedanych',
-    'id',
-    'id_sklepu',
 ];
 
 const IDENTIFIER_COLUMNS = [
@@ -123,7 +120,7 @@ function parseNumber(mixed $value): ?float
     }
 
     $value = trim((string) $value);
-    $value = str_replace(' ', '', $value);
+    $value = str_replace([' ', "\u{00A0}", "\u{202F}"], '', $value);
 
     if (str_contains($value, ',')) {
         $value = str_replace('.', '', $value);
@@ -230,6 +227,11 @@ function convertValue(
         return $result;
     }
 
+    // Identyfikatory zawsze jako string (np. ID, EAN, SKU).
+    if (in_array($column, IDENTIFIER_COLUMNS, true)) {
+        return $value;
+    }
+
     // Float.
     if (in_array($column, FLOAT_COLUMNS, true)) {
         $result = parseNumber($value);
@@ -260,11 +262,6 @@ function convertValue(
         return (int) $value;
     }
 
-    // Identyfikatory zawsze jako string.
-    if (in_array($column, IDENTIFIER_COLUMNS, true)) {
-        return $value;
-    }
-
     // Pozostałe wartości jako tekst.
     return $value;
 }
@@ -279,6 +276,17 @@ function validateProduct(
 ): bool {
 
     $valid = true;
+
+    // ID produktu jest wymagane.
+    if (!isset($product['id']) || $product['id'] === '') {
+        $errors[] = [
+            'row' => $rowNumber,
+            'column' => 'id',
+            'message' => 'Brak ID produktu.',
+        ];
+
+        $valid = false;
+    }
 
     // Nazwa produktu jest wymagana.
     if (empty($product['nazwa'])) {
@@ -440,10 +448,10 @@ function importProducts(string $inputFile): void
 
         foreach ($columns as $column => $columnIndex) {
 
-            $cell = $sheet->getCellByColumnAndRow(
-                $columnIndex,
-                $rowNumber
-            );
+            $coordinate = Coordinate::stringFromColumnIndex($columnIndex)
+                . $rowNumber;
+
+            $cell = $sheet->getCell($coordinate);
 
             $rawValue = $cell->getValue();
 
@@ -496,7 +504,9 @@ function importProducts(string $inputFile): void
             continue;
         }
 
-        if (isset($seenIds[$id])) {
+        $idKey = (string) $id;
+
+        if (array_key_exists($idKey, $seenIds)) {
             $errors[] = [
                 'row' => null,
                 'column' => 'id',
@@ -508,12 +518,12 @@ function importProducts(string $inputFile): void
             continue;
         }
 
-        $seenIds[$id] = true;
+        $seenIds[$idKey] = true;
     }
 
     $products = array_values($products);
 
-    // Przy błędach walidacyjnych nie zapisujemy niekompletnego pliku.
+    // Przy bledach walidacyjnych nie zapisujemy niekompletnego pliku.
     if ($errors !== []) {
         echo PHP_EOL;
         echo "Wykryto błędy walidacji:" . PHP_EOL;
@@ -529,12 +539,12 @@ function importProducts(string $inputFile): void
 
         error(
             'Import przerwany. '
-            . 'Popraw błędy w Excelu i uruchom ponownie.'
+            . 'Popraw bledy w Excelu i uruchom ponownie.'
         );
     }
 
     if ($products === []) {
-        error('Nie znaleziono produktów do zaimportowania.');
+        error('Nie znaleziono produktow do zaimportowania.');
     }
 
     // Struktura wynikowego JSON.
