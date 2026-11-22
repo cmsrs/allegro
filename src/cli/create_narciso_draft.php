@@ -8,6 +8,9 @@ use App\AllegroOAuth;
 
 const CATEGORY_ID = '17752';
 const PRODUCT_EAN = '6291108524084';
+const BRAND_PARAMETER_ID = '248811';
+const LINE_PARAMETER_ID = '250583';
+const AMBIGUOUS_LINE_VALUE_ID = '250583_1935162';
 
 function requestApi(string $method, string $url, string $token, array|string|null $body = null, string $contentType = 'application/vnd.allegro.public.v1+json'): array
 {
@@ -79,15 +82,21 @@ try {
         throw new RuntimeException('Brak rozszerzenia PHP cURL (php-curl).');
     }
 
-    $options = getopt('', ['brand-value:', 'line-value:']);
+    $options = getopt('', ['brand-value:', 'line-value::', 'line-text::']);
     $brandValueId = (string)($options['brand-value'] ?? '');
-    $lineValueId = (string)($options['line-value'] ?? '');
+    // „inna” jest wartością niejednoznaczną. Allegro wymaga wtedy
+    // dodatkowego tekstu w polu values, np. „For Her”.
+    $lineValueId = (string)($options['line-value'] ?? AMBIGUOUS_LINE_VALUE_ID);
+    $lineText = (string)($options['line-text'] ?? 'For Her');
 
     if (!preg_match('/^248811_.+$/', $brandValueId)) {
         throw new RuntimeException('Podaj ID wartości marki z parametru 248811: --brand-value=248811_ID');
     }
     if (!preg_match('/^250583_.+$/', $lineValueId)) {
         throw new RuntimeException('Podaj ID wartości linii z parametru 250583: --line-value=250583_ID');
+    }
+    if ($lineValueId === AMBIGUOUS_LINE_VALUE_ID && trim($lineText) === '') {
+        throw new RuntimeException('Dla wartości „inna” podaj propozycję tekstową: --line-text="For Her"');
     }
 
     $oauth = new AllegroOAuth($config);
@@ -113,8 +122,12 @@ try {
                 'name' => $name,
                 'category' => ['id' => CATEGORY_ID],
                 'parameters' => [
-                    ['id' => '248811', 'valuesIds' => [$brandValueId]], // Marka
-                    ['id' => '250583', 'valuesIds' => [$lineValueId]], // Linia
+                    ['id' => BRAND_PARAMETER_ID, 'valuesIds' => [$brandValueId]], // Marka
+                    [
+                        'id' => LINE_PARAMETER_ID,
+                        'valuesIds' => [$lineValueId],
+                        ...($lineValueId === AMBIGUOUS_LINE_VALUE_ID ? ['values' => [trim($lineText)]] : []),
+                    ], // Linia
                     ['id' => '219893', 'values' => ['120']], // Pojemność w ml
                     ['id' => '247944', 'valuesIds' => ['247944_838294']], // Rodzaj
                     ['id' => '225693', 'values' => [PRODUCT_EAN]], // EAN
