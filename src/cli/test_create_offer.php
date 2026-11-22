@@ -16,6 +16,19 @@ use App\AllegroOAuth;
 
 const DEFAULT_CATEGORY_ID = '42578';
 
+
+function getCategoryParameters(
+    string $token,
+    string $apiUrl,
+    string $categoryId
+): array {
+    return allegroRequest(
+        'GET',
+        rtrim($apiUrl, '/') . '/sale/categories/' . $categoryId . '/parameters',
+        $token
+    );
+}
+
 /** @return array<string, mixed> */
 function allegroRequest(
     string $method,
@@ -107,23 +120,66 @@ function createOffer(
     bool $publish,
     ?string $shippingRateId
 ): array {
+
     $offer = [
         'name' => 'Produkt testowy Allegro Sandbox',
         'category' => ['id' => $categoryId],
-        'images' => array_map(static fn (string $url): array => ['url' => $url], $images),
+
+        // Allegro oczekuje listy URL-i (stringów)
+        'images' => $images,
+
+        'sellingMode' => [
+            'format' => 'BUY_NOW',
+            'price' => ['amount' => '19.99', 'currency' => 'PLN'],
+        ],
+
+        'stock' => ['available' => 1],
+
+        'description' => [
+            'sections' => [
+                [
+                    'items' => [
+                        [
+                            'type' => 'TEXT',
+                            'content' => '<p>To jest przykładowa oferta utworzona w Allegro Sandbox.</p><p>Opis testowy produktu z dwoma obrazkami.</p>',
+                        ],
+                    ],
+                ],
+            ],
+        ],
+
+        'publication' => ['status' => $publish ? 'ACTIVE' : 'INACTIVE'],
+    ];
+
+    /*
+    $offer = [
+        'name' => 'Produkt testowy Allegro Sandbox',
+        'category' => ['id' => $categoryId],
+        //'images' => array_map(static fn (string $url): array => ['url' => $url], $images),
+        'images' => $images,
         'sellingMode' => [
             'format' => 'BUY_NOW',
             'price' => ['amount' => '19.99', 'currency' => 'PLN'],
         ],
         'stock' => ['available' => 1],
-        'description' => [[
-            'section' => ['items' => [[
-                'type' => 'TEXT',
-                'content' => "To jest przykładowa oferta utworzona w Allegro Sandbox.\n\nOpis testowy produktu z dwoma obrazkami.",
-            ]]],
-        ]],
+
+'description' => [
+    'sections' => [
+        [
+            'items' => [
+                [
+                    'type' => 'TEXT',
+                    'content' => "To jest przykładowa oferta utworzona w Allegro Sandbox.\n\nOpis testowy produktu z dwoma obrazkami.",
+                ],
+            ],
+        ],
+    ],
+],        
+
+
         'publication' => ['status' => $publish ? 'ACTIVE' : 'INACTIVE'],
     ];
+     */
 
     if ($publish) {
         if ($shippingRateId === null) {
@@ -200,6 +256,29 @@ try {
     $shippingRateId = $publish
         ? getFirstShippingRateId($token, $config['api_url'])
         : null;
+
+
+    $categoryParameters = getCategoryParameters(
+        $token,
+        $config['api_url'],
+        $categoryId
+    );
+
+    echo "Parametry kategorii:\n";
+
+    foreach ($categoryParameters['parameters'] ?? [] as $parameter) {
+        if (!is_array($parameter)) {
+            continue;
+        }
+
+        printf(
+            "%s | %s | wymagany: %s | produkt: %s\n",
+            $parameter['id'] ?? '?',
+            $parameter['name'] ?? '?',
+            !empty($parameter['required']) ? 'TAK' : 'NIE',
+            !empty($parameter['options']['describesProduct']) ? 'TAK' : 'NIE'
+        );
+    }        
 
     echo "Tworzę ofertę...\n";
     $offer = createOffer(
