@@ -453,8 +453,64 @@ try {
         $token,
         $config['api_url'],
         $ean
-    );    
+    );
+    
+        
+    if ($productExists) {
+        echo "\nProdukt już istnieje w katalogu Allegro.\n";
+        echo "Nie tworzę kolejnego produktu.\n";
+    } else {
+        echo "\nProdukt nie istnieje. Przygotowuję zgłoszenie nowego produktu...\n";
 
+        // Wartości słownikowe Allegro dla parametrów Marka i Linia.
+        // Przekazujemy je jako argumenty CLI lub zmienne środowiskowe.
+        $brandValueId = (string) (
+            $options['brand-value']
+            ?? $_ENV['ALLEGRO_TEST_BRAND_VALUE_ID']
+            ?? ''
+        );
+
+        $lineValueId = (string) (
+            $options['line-value']
+            ?? $_ENV['ALLEGRO_TEST_LINE_VALUE_ID']
+            ?? ''
+        );
+
+        if ($brandValueId === '' || $lineValueId === '') {
+            throw new RuntimeException(
+                "Brakuje wartości słownikowych Marka lub Linia.\n" .
+                "Uruchom skrypt z parametrami:\n" .
+                "--brand-value=ID_WARTOSCI_MARKI " .
+                "--line-value=ID_WARTOSCI_LINII"
+            );
+        }
+
+        echo "\nTworzę propozycję produktu w katalogu Allegro...\n";
+        echo "Zdjęcia: test1.jpg oraz test2.jpg\n";
+
+        $product = createTestProduct(
+            $token,
+            $config['api_url'],
+            $imageUrls,
+            $brandValueId,
+            $lineValueId
+        );
+
+        echo "\nOdpowiedź Allegro:\n";
+        echo json_encode(
+            $product,
+            JSON_PRETTY_PRINT |
+            JSON_UNESCAPED_UNICODE |
+            JSON_UNESCAPED_SLASHES
+        ) . "\n";
+
+        if (!empty($product['id'])) {
+            echo "\nSUKCES! Zgłoszono produkt do katalogu Allegro.\n";
+            echo "ID produktu: {$product['id']}\n";
+        } else {
+            echo "\nAllegro przyjęło odpowiedź, ale nie zwróciło ID produktu.\n";
+        }
+    }    
 
     echo "Tworzę ofertę...\n";
     $offer = createOffer(
