@@ -45,6 +45,72 @@ function getProductParameters(
 
 
 /**
+ * Wyświetla dostępne wartości słownikowe dla wskazanych parametrów.
+ */
+function showDictionaryValues(
+    string $token,
+    string $apiUrl,
+    string $categoryId
+): void {
+    $response = getCategoryParameters($token, $apiUrl, $categoryId);
+
+    $wantedParameters = [
+        '248811' => 'Marka',
+        '250583' => 'Linia',
+    ];
+
+    echo "\n========================================\n";
+    echo "DOSTĘPNE WARTOŚCI: MARKA I LINIA\n";
+    echo "Kategoria: {$categoryId}\n";
+    echo "========================================\n";
+
+    foreach ($response['parameters'] ?? [] as $parameter) {
+        $id = (string) ($parameter['id'] ?? '');
+
+        if (!isset($wantedParameters[$id])) {
+            continue;
+        }
+
+        echo "\n{$wantedParameters[$id]} (ID parametru: {$id})\n";
+        echo str_repeat('-', 50) . "\n";
+
+        $dictionary = $parameter['dictionary'] ?? [];
+
+        if (!is_array($dictionary) || $dictionary === []) {
+            echo "Brak wartości słownikowych w odpowiedzi API.\n";
+
+            $ambiguousId = $parameter['options']['ambiguousValueId'] ?? null;
+            if ($ambiguousId) {
+                echo "Wartość niejednoznaczna: {$ambiguousId}\n";
+            }
+
+            continue;
+        }
+
+        foreach ($dictionary as $value) {
+            if (!is_array($value)) {
+                continue;
+            }
+
+            printf(
+                "ID: %-25s Wartość: %s\n",
+                $value['id'] ?? '?',
+                $value['value'] ?? '?'
+            );
+        }
+
+        $ambiguousId = $parameter['options']['ambiguousValueId'] ?? null;
+
+        if ($ambiguousId) {
+            echo "ID wartości niejednoznacznej: {$ambiguousId}\n";
+        }
+    }
+
+    echo "\n========================================\n";
+}
+
+
+/**
  * Zgłasza nowy produkt do katalogu Allegro.
  *
  * UWAGA:
@@ -381,7 +447,13 @@ try {
         throw new RuntimeException('Brak rozszerzenia PHP cURL. Zainstaluj php-curl.');
     }
 
-    $options = getopt('', ['publish', 'category:']);
+    $options = getopt('', [
+        'publish',
+        'category:',
+        'brand-value:',
+        'line-value:',
+        'list-values',
+    ]);
     $publish = array_key_exists('publish', $options);
     $categoryId = (string) ($options['category'] ?? $_ENV['ALLEGRO_TEST_CATEGORY_ID'] ?? DEFAULT_CATEGORY_ID);
 
@@ -392,6 +464,19 @@ try {
 
     $oauth = new AllegroOAuth($config);
     $token = $oauth->getAccessToken();
+
+    // Wyświetlenie słownikowych wartości Marka i Linia.
+    showDictionaryValues(
+        $token,
+        $config['api_url'],
+        $categoryId
+    );
+
+    // Jeśli podano --list-values, kończymy bez tworzenia produktu/oferty.
+    if (array_key_exists('list-values', $options)) {
+        exit(0);
+    }    
+
     echo "Tryb: " . ($publish ? "ACTIVE (publikacja)" : "INACTIVE (szkic)") . "\n";
     echo "Kategoria: {$categoryId}\n";
 
@@ -454,7 +539,7 @@ try {
         $config['api_url'],
         $ean
     );
-    
+
         
     if ($productExists) {
         echo "\nProdukt już istnieje w katalogu Allegro.\n";
