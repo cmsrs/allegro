@@ -465,6 +465,34 @@ try {
     $oauth = new AllegroOAuth($config);
     $token = $oauth->getAccessToken();
 
+
+
+    // $brandId = '248811_1981839';
+
+    // foreach ($response['parameters'] ?? [] as $parameter) {
+    //     if ((string)($parameter['id'] ?? '') !== '250583') {
+    //         continue;
+    //     }
+
+    //     echo "\nLinie dostępne dla Narciso Rodriguez:\n";
+
+    //     foreach ($parameter['dictionary'] ?? [] as $value) {
+    //         if (in_array($brandId, $value['dependsOnValueIds'] ?? [], true)) {
+    //             printf(
+    //                 "%s => %s\n",
+    //                 $value['id'] ?? '',
+    //                 $value['value'] ?? ''
+    //             );
+    //         }
+    //     }
+    // }
+
+    // die('_+___');
+
+
+
+
+
     // Wyświetlenie słownikowych wartości Marka i Linia.
     showDictionaryValues(
         $token,
@@ -515,6 +543,63 @@ try {
         $config['api_url'],
         $categoryId
     );
+
+
+$brandId = '248811_1981839';
+$foundLines = false;
+
+echo "\n========================================\n";
+echo "LINIE DOSTĘPNE DLA MARKI NARCISO RODRIGUEZ\n";
+echo "========================================\n";
+
+foreach ($categoryParameters['parameters'] ?? [] as $parameter) {
+    if ((string)($parameter['id'] ?? '') !== '250583') {
+        continue;
+    }
+
+    foreach ($parameter['dictionary'] ?? [] as $value) {
+        $dependencies = array_map(
+            'strval',
+            $value['dependsOnValueIds'] ?? []
+        );
+
+        if (in_array($brandId, $dependencies, true)) {
+            printf(
+                "ID: %-25s Linia: %s\n",
+                $value['id'] ?? '?',
+                $value['value'] ?? '?'
+            );
+
+            $foundLines = true;
+        }
+    }
+}
+
+if (!$foundLines) {
+    echo "Nie znaleziono linii z bezpośrednią zależnością od tej marki.\n";
+    echo "Sprawdźmy strukturę odpowiedzi API.\n";
+
+    foreach ($categoryParameters['parameters'] ?? [] as $parameter) {
+        if ((string)($parameter['id'] ?? '') !== '250583') {
+            continue;
+        }
+
+        foreach ($parameter['dictionary'] ?? [] as $value) {
+            printf(
+                "ID: %s | Nazwa: %s | Zależności: %s\n",
+                $value['id'] ?? '?',
+                $value['value'] ?? '?',
+                json_encode(
+                    $value['dependsOnValueIds'] ?? [],
+                    JSON_UNESCAPED_UNICODE
+                )
+            );
+        }
+    }
+}
+
+echo "\nKoniec sprawdzania.\n";
+exit(0);    
 
     echo "Parametry kategorii:\n";
 
@@ -596,6 +681,7 @@ try {
             echo "\nAllegro przyjęło odpowiedź, ale nie zwróciło ID produktu.\n";
         }
     }    
+
 
     echo "Tworzę ofertę...\n";
     $offer = createOffer(
