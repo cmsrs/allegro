@@ -29,6 +29,99 @@ function getCategoryParameters(
     );
 }
 
+
+
+function getProductParameters(
+    string $token,
+    string $apiUrl,
+    string $categoryId
+): array {
+    return allegroRequest(
+        'GET',
+        rtrim($apiUrl, '/') . '/sale/categories/' . $categoryId . '/product-parameters',
+        $token
+    );
+}
+
+
+/**
+ * Zgłasza nowy produkt do katalogu Allegro.
+ *
+ * UWAGA:
+ * BRAND_VALUE_ID i LINE_VALUE_ID muszą być prawidłowymi
+ * identyfikatorami wartości słownikowych z kategorii 17752.
+ */
+function createTestProduct(
+    string $token,
+    string $apiUrl,
+    array $images,
+    string $brandValueId,
+    string $lineValueId
+): array {
+
+    $product = [
+        'name' => 'Narcisa Rodriguen for her 120 ml EDP damskie',
+
+        'category' => [
+            'id' => '17752',
+        ],
+
+        'parameters' => [
+            [
+                'id' => '248811', // Marka
+                'valuesIds' => [$brandValueId],
+            ],
+            [
+                'id' => '250583', // Linia
+                'valuesIds' => [$lineValueId],
+            ],
+            [
+                'id' => '219893', // Pojemność opakowania
+                'values' => ['100'],
+            ],
+            [
+                'id' => '247944', // Rodzaj
+                'valuesIds' => ['247944_838294'],
+            ],
+            [
+                'id' => '225693', // EAN
+                'values' => ['6291108524084'],
+            ],
+        ],
+
+        // Endpoint product-proposals oczekuje obiektów {url: ...}
+        'images' => array_map(
+            static fn(string $url): array => ['url' => $url],
+            $images
+        ),
+
+        'description' => [
+            'sections' => [
+                [
+                    'items' => [
+                        [
+                            'type' => 'TEXT',
+                            'content' => '<p>Testowy produkt Narcisa Rodriguen for her 120 ml EDP.</p>',
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ];
+
+    echo "Zgłaszam produkt do katalogu Allegro...\n";
+
+    return allegroRequest(
+        'POST',
+        rtrim($apiUrl, '/') . '/sale/product-proposals',
+        $token,
+        json_encode(
+            $product,
+            JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+        )
+    );
+}
+
 /** @return array<string, mixed> */
 function allegroRequest(
     string $method,
@@ -252,6 +345,25 @@ try {
         echo "Wysyłam obraz: {$imageFile}\n";
         $imageUrls[] = uploadImage($token, $config['upload_url'], $imageFile);
     }
+
+    // Pobieramy parametry wymagane do utworzenia produktu.
+    $productParameters = getProductParameters(
+        $token,
+        $config['api_url'],
+        '17752'
+    );
+
+    echo "\nParametry produktu w kategorii 17752:\n";
+
+    foreach ($productParameters['parameters'] ?? [] as $parameter) {
+        printf(
+            "%s | %s | wymagany dla produktu: %s\n",
+            $parameter['id'] ?? '?',
+            $parameter['name'] ?? '?',
+            !empty($parameter['requiredForProduct']) ? 'TAK' : 'NIE'
+        );
+    }
+
 
     $shippingRateId = $publish
         ? getFirstShippingRateId($token, $config['api_url'])
