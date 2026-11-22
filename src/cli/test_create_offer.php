@@ -122,6 +122,61 @@ function createTestProduct(
     );
 }
 
+/**
+ * Wyszukuje produkt w katalogu Allegro po kodzie EAN/GTIN.
+ *
+ * @return array<string, mixed>
+ */
+function findProductByEan(
+    string $token,
+    string $apiUrl,
+    string $ean
+): array {
+    $url = rtrim($apiUrl, '/') . '/sale/products?' . http_build_query([
+        'phrase' => $ean,
+        'mode' => 'GTIN',
+        'language' => 'pl-PL',
+    ]);
+
+    return allegroRequest('GET', $url, $token);
+}
+
+/**
+ * Wyświetla informację, czy produkt o podanym EAN istnieje w katalogu.
+ */
+function checkProductByEan(
+    string $token,
+    string $apiUrl,
+    string $ean
+): bool {
+    echo "\nSprawdzam, czy EAN {$ean} istnieje w katalogu Allegro...\n";
+
+    $response = findProductByEan($token, $apiUrl, $ean);
+    $products = $response['products'] ?? [];
+
+    if (!is_array($products) || count($products) === 0) {
+        echo "NIE ZNALEZIONO produktu o EAN: {$ean}\n";
+        return false;
+    }
+
+    echo "ZNALEZIONO produkt(y) o EAN: {$ean}\n";
+
+    foreach ($products as $product) {
+        if (!is_array($product)) {
+            continue;
+        }
+
+        printf(
+            "  ID produktu: %s\n  Nazwa: %s\n",
+            $product['id'] ?? 'brak',
+            $product['name'] ?? 'brak'
+        );
+    }
+
+    return true;
+}
+
+
 /** @return array<string, mixed> */
 function allegroRequest(
     string $method,
@@ -390,7 +445,16 @@ try {
             !empty($parameter['required']) ? 'TAK' : 'NIE',
             !empty($parameter['options']['describesProduct']) ? 'TAK' : 'NIE'
         );
-    }        
+    }   
+    
+    $ean = '6291108524084';
+
+    $productExists = checkProductByEan(
+        $token,
+        $config['api_url'],
+        $ean
+    );    
+
 
     echo "Tworzę ofertę...\n";
     $offer = createOffer(
