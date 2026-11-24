@@ -9,8 +9,8 @@ declare(strict_types=1);
  * php src/cli/find_category.php "sekator akumulatorowy"
  */
 
-require_once __DIR__ . '/../../config.php';
-require_once __DIR__ . '/../../src/AllegroOAuth.php';
+require_once __DIR__ . '/../../../config.php';
+require_once __DIR__ . '/../../../src/AllegroOAuth.php';
 
 use App\AllegroOAuth;
 

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// !!!!!!!!!
 // wymaga instalacji
 //"phpoffice/phpspreadsheet"
 

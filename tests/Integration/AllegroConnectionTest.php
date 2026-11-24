@@ -19,7 +19,7 @@ class AllegroConnectionTest extends TestCase
         $exitCode = 0;
 
         $command = escapeshellarg(PHP_BINARY) . ' ' .
-            escapeshellarg($this->projectRoot . '/src/cli/test_oauth.php');
+            escapeshellarg($this->projectRoot . '/src/cli/test/test_oauth.php');
 
         exec($command . ' 2>&1', $output, $exitCode);
 
@@ -35,7 +35,7 @@ class AllegroConnectionTest extends TestCase
         $exitCode = 0;
 
         $command = escapeshellarg(PHP_BINARY) . ' ' .
-            escapeshellarg($this->projectRoot . '/src/cli/test_category.php');
+            escapeshellarg($this->projectRoot . '/src/cli/test/test_category.php');
 
         exec($command . ' 2>&1', $output, $exitCode);
 
