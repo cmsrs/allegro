@@ -10,7 +10,6 @@
     "products": [
         {
             "id": "213189981",
-            "id_w_sklepie": "16194688002",
             "nazwa": "perfumy cmsRS",
             "kategoria": "Uroda / Perfumy i wody / Zapachy unisex / Wody perfumowane",
             "sku": null,
@@ -25,7 +24,6 @@
         },
         {
             "id": "213189999",
-            "id_w_sklepie": "16194688099",
             "nazwa": "odswiezacz powietrza cmsRS",
             "kategoria":   "Supermarket / Utrzymanie czystości / Odświeżacze powietrza",
             "sku": null,
