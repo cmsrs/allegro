@@ -22,8 +22,12 @@ class AllegroImageUploader
         $this->client = $client ?? new Client(['timeout' => 60]);
     }
 
-    /** Uploads an image as binary data and returns its Allegro URL. */
-    public function upload(string $filePath): string
+    /**
+     * Uploads an image as binary data and returns its Allegro URL and expiration time.
+     *
+     * @return array{location: string, expiresAt: ?string}
+     */
+    public function upload(string $filePath): array
     {
         if (!is_file($filePath) || !is_readable($filePath)) {
             throw new RuntimeException('Brak pliku lub brak prawa odczytu: ' . $filePath);
@@ -72,6 +76,9 @@ class AllegroImageUploader
             throw new RuntimeException('Allegro nie zwróciło adresu location dla zdjęcia: ' . $filePath);
         }
 
-        return $data['location'];
+        return [
+            'location' => $data['location'],
+            'expiresAt' => is_string($data['expiresAt'] ?? null) ? $data['expiresAt'] : null,
+        ];
     }
 }
