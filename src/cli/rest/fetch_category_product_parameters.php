@@ -7,12 +7,12 @@ use App\Services\Rest\AllegroCategoryProductParameters;
 use App\Services\Rest\CategoryDetailsJsonWriter;
 use App\Services\Rest\CategoryDetailsJsonRead;
 
-require_once dirname(__DIR__, 4) . '/config.php';
+require_once dirname(__DIR__, 3) . '/config.php';
 
-$categories = (new CategoryDetailsJsonRead)->getFirstFindingCategory(dirname(__DIR__, 4) . '/dane/kategorie_allegro.json');
+$categories = (new CategoryDetailsJsonRead)->getFirstFindingCategory(dirname(__DIR__, 3) . '/dane/kategorie_allegro.json');
 
 try {
-    echo "Pobieram token Allegro...\n";
+    echo "\nAPI: GET /sale/categories/{id}/product-parameters". "\n";    
     $oauth = new AllegroOAuth($config);
     $accessToken = $oauth->getAccessToken();
 
@@ -20,10 +20,9 @@ try {
     $parametersById = $categoryParameters->getByCategoryIds(array_column($categories, 'id'));
     $parametersById = array_column($parametersById, 'parameters', 'id');
 
-    foreach ($categories as &$category) {
-        $category['product_parameters'] = $parametersById[$category['id']] ?? [];
+    foreach ($categories as $key => $category) {
+        $categories[$key]['product_parameters'] = $parametersById[$category['id']] ?? [];
     }
-    unset($category);
 
     $outputDirectory = dirname(__DIR__, 2) . '/dane';
     $outputPath = $outputDirectory . '/parametry_produktowe_kategorii_allegro.json';
@@ -35,7 +34,7 @@ try {
 
     (new CategoryDetailsJsonWriter())->write($outputPath, $output);
 
-    echo "\nPobrane parametry produktowe:\n";
+    echo "Pobrane parametry produktowe:\n";
     foreach ($categories as $category) {
         echo sprintf(
             "ID %s | %s | parametrów: %d\n",
