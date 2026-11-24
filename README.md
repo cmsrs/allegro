@@ -93,5 +93,5 @@ Zapisano JSON: /home/rob/allegro/allegro/dane/parametry_produktowe_kategorii_all
 ### wywołanie, dodanie produktów do allegro:
 
 ```bash
-./create_offer.sh
+./create_offers.sh
 ```
