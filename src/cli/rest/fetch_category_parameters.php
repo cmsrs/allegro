@@ -13,12 +13,11 @@ $categories = (new CategoryDetailsJsonRead)->getFirstFindingCategory(dirname(__D
 
 
 try {
-    echo "Pobieram token Allegro...\n";
+    echo "\nAPI: GET /sale/categories/{categoryId}/parameters". "\n";    
+
     $oauth = new AllegroOAuth($config);
     $accessToken = $oauth->getAccessToken();
-
     $categoryParameters = new AllegroCategoryParameters($config['api_url'], $accessToken);
-    echo "API: GET /sale/categories/{categoryId}/parameters". "\n";
     $parametersById = $categoryParameters->getByCategoryIds(array_column($categories, 'id'));
     $parametersById = array_column($parametersById, 'parameters', 'id');
     
@@ -35,7 +34,7 @@ try {
 
     (new CategoryDetailsJsonWriter())->write($outputPath, $output);
 
-    echo "\nPobrane parametry kategorii/ofert:\n";
+    echo "Pobrane parametry kategorii/ofert:\n";
     foreach ($categories as $category) {
         echo sprintf(
             "ID %s | %s | parametrów: %d\n",

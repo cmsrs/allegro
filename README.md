@@ -52,22 +52,10 @@ Poprawność działania środowiska można sprawdzić za pomocą testów jednost
 
 Testy pozwalają sprawdzić poprawność działania poszczególnych elementów aplikacji oraz komunikacji z Allegro.
 
-## 4. Operacje na produktach Allegro
-Dopasowanie produktów do kategorii
+## 4. Operacje na produktach Allegro - Automatyzacja procesu importu produktów na podstawie pliku: ./produkty/dane.json
 
-Uruchomienie skryptu:
+wywołanie:
 
-php ./src/cli/rest/match_product_categories.php
-
-Skrypt służy do dopasowywania produktów do odpowiednich kategorii Allegro.
-## 5. Planowany zakres funkcjonalności
-
-    Pobieranie danych z Allegro.
-
-    Przetwarzanie i eksport danych do plików JSON.
-
-    Dopasowywanie produktów do kategorii Allegro.
-
-    Tworzenie produktów w Allegro.
-
-    Automatyzacja procesu importu produktów.
+```bash
+./create_offer.sh
+```

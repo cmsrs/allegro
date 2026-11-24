@@ -9,6 +9,7 @@ use App\Services\Rest\AllegroCategoryMatcher;
 require_once dirname(__DIR__, 3) . '/config.php';
 
 try {
+    echo "\nAPI: GET /sale/matching-categories". "\n";    
     $productsData = new GetProductsData();
     $categoryNames = $productsData->getUniqueCategories();
 
@@ -24,7 +25,7 @@ try {
 
     $matcher = new AllegroCategoryMatcher($config['api_url'], $accessToken);
 
-    echo "API: GET /sale/matching-categories". "\n";
+
     $results = $matcher->matchCategories($categoryNames);
 
     $outputDirectory = dirname(__DIR__, 3) . '/dane';
