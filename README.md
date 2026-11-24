@@ -87,6 +87,21 @@ Pobrane parametry produktowe:
 ID 319286 | Wody perfumowane | parametrów: 7
 ID 253354 | Odświeżacze powietrza | parametrów: 19
 Zapisano JSON: /home/rob/allegro/allegro/dane/parametry_produktowe_kategorii_allegro.json
+
+/home/rob/allegro/allegro/src/cli/dictionaries/fetch_shipping_rates.php
+API: GET /sale/shipping-rates
+Pobrano cenników dostawy: 11
+Zapisano JSON: /home/rob/allegro/allegro/dane/cenniki_dostawy_allegro.json
+
+/home/rob/allegro/allegro/src/cli/dictionaries/fetch_return_policies.php
+API: GET /after-sales-service-conditions/return-policies
+Pobrano warunków zwrotu: 1
+Zapisano JSON: /home/rob/allegro/allegro/dane/warunki_zwrotow_allegro.json
+
+/home/rob/allegro/allegro/src/cli/dictionaries/fetch_implied_warranties.php
+API: GET /after-sales-service-conditions/implied-warranties
+Pobrano warunków reklamacji: 1
+Zapisano JSON: /home/rob/allegro/allegro/dane/warunki_reklamacji_allegro.json
 ```
 
 
