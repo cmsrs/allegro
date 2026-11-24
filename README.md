@@ -54,7 +54,13 @@ Testy pozwalają sprawdzić poprawność działania poszczególnych elementów a
 
 ## 4. Operacje na produktach Allegro - Automatyzacja procesu importu produktów na podstawie pliku: ./produkty/dane.json
 
-wywołanie:
+utworzenie słowników w ./dane : 
+
+```bash
+./create_dictionary.sh 
+```
+
+wywołanie, dodanie produktów do allegro:
 
 ```bash
 ./create_offer.sh
