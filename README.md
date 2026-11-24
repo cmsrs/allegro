@@ -60,6 +60,39 @@ utworzenie słowników w ./dane :
 ./create_dictionary.sh 
 ```
 
+przykładowy raport utworzenia słownikow:
+
+```bash
+rob@laptoprob:~/allegro/allegro$ ./create_dictionary.sh 
+
+/home/rob/allegro/allegro/src/cli/rest/match_product_categories.php
+API: GET /sale/matching-categories
+Kategorie do dopasowania: 2
+Pobieram token Allegro...
+Zapisano dopasowania dla 2 kategorii do /home/rob/allegro/allegro/dane/kategorie_allegro.json
+
+/home/rob/allegro/allegro/src/cli/rest/check_category_leaves.php
+API: GET /sale/categories/{categoryId}
+Wszystkie sprawdzone kategorie są liśćmi.
+Sprawdzono: 2 | liście: 2 | nie-liście: 0
+
+/home/rob/allegro/allegro/src/cli/rest/fetch_category_parameters.php
+API: GET /sale/categories/{categoryId}/parameters
+Pobrane parametry kategorii/ofert:
+ID 319286 | Wody perfumowane | parametrów: 9
+ID 253354 | Odświeżacze powietrza | parametrów: 21
+Zapisano JSON: /home/rob/allegro/allegro/dane/parametry_kategorii_allegro.json
+
+/home/rob/allegro/allegro/src/cli/rest/fetch_category_product_parameters.php
+API: GET /sale/categories/{id}/product-parameters
+Pobrane parametry produktowe:
+ID 319286 | Wody perfumowane | parametrów: 7
+ID 253354 | Odświeżacze powietrza | parametrów: 19
+Zapisano JSON: /home/rob/allegro/allegro/dane/parametry_produktowe_kategorii_allegro.json
+rob@laptoprob:~/allegro/allegro$ 
+```
+
+
 wywołanie, dodanie produktów do allegro:
 
 ```bash
