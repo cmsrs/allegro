@@ -7,7 +7,6 @@ require_once __DIR__ . '/../../config.php';
 use App\AllegroOAuth;
 
 try {
-    //$a = 11/0;
     $oauth = new AllegroOAuth($config);
 
     $token = $oauth->getAccessToken();
@@ -21,7 +20,5 @@ try {
     echo "  RUN: php ./src/cli/authorize_device.php  ";
     echo " ";
     echo "BŁĄD: " . $e->getMessage() . "\n";
-    
-
 }
 

@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+// wymaga instalacji
+//"phpoffice/phpspreadsheet"
+
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
