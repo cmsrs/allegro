@@ -12,7 +12,8 @@ require_once dirname(__DIR__, 3) . '/config.php';
 $categories = (new CategoryDetailsJsonRead)->getFirstFindingCategory(dirname(__DIR__, 3) . '/dane/kategorie_allegro.json');
 
 try {
-    echo "\nAPI: GET /sale/categories/{id}/product-parameters". "\n";    
+    echo "\n" . __FILE__ . PHP_EOL;    
+    echo "API: GET /sale/categories/{id}/product-parameters". "\n";    
     $oauth = new AllegroOAuth($config);
     $accessToken = $oauth->getAccessToken();
 
@@ -24,7 +25,11 @@ try {
         $categories[$key]['product_parameters'] = $parametersById[$category['id']] ?? [];
     }
 
-    $outputDirectory = dirname(__DIR__, 2) . '/dane';
+    $outputDirectory = dirname(__DIR__, 3) . '/dane';
+    if (!is_dir($outputDirectory) && !mkdir($outputDirectory, 0775, true) && !is_dir($outputDirectory)) {
+        throw new RuntimeException('Nie udało się utworzyć katalogu: ' . $outputDirectory);
+    }
+
     $outputPath = $outputDirectory . '/parametry_produktowe_kategorii_allegro.json';
     $output = [
         'generated_at' => date(DATE_ATOM),

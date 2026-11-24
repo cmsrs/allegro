@@ -13,7 +13,8 @@ $categories = (new CategoryDetailsJsonRead)->getFirstFindingCategory(dirname(__D
 
 
 try {
-    echo "\nAPI: GET /sale/categories/{categoryId}/parameters". "\n";    
+    echo "\n" . __FILE__ . PHP_EOL;    
+    echo "API: GET /sale/categories/{categoryId}/parameters". "\n";    
 
     $oauth = new AllegroOAuth($config);
     $accessToken = $oauth->getAccessToken();

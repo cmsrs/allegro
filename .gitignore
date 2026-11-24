@@ -1,6 +1,7 @@
 /vendor/
 .env
 /data/
+/dane/
 /tmp/
 .phpunit.result.cache
 /.phpunit.cache

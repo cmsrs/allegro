@@ -9,7 +9,8 @@ use App\Services\Rest\AllegroCategoryMatcher;
 require_once dirname(__DIR__, 3) . '/config.php';
 
 try {
-    echo "\nAPI: GET /sale/matching-categories". "\n";    
+    echo "\n" . __FILE__ . PHP_EOL;    
+    echo "API: GET /sale/matching-categories". "\n";    
     $productsData = new GetProductsData();
     $categoryNames = $productsData->getUniqueCategories();
 
