@@ -9,13 +9,13 @@ declare(strict_types=1);
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
-require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
+require_once dirname(__DIR__, 3) . '/vendor/autoload.php';
 
 /**
  * Excel -> JSON Products Importer
  *
  * Usage:
- * php src/cli/import_products_to_json.php ./data/dane.xlsx
+ * php src/cli/import/import_products_to_json.php ./data/dane.xlsx
  */
 
 const JSON_COLUMNS = [

@@ -85,7 +85,7 @@ class AllegroCategoryMatcher
 
             $results[] = [
                 'source_category' => $categoryName,
-                'first_id' => $matchingCategories[0]['id'] ?? null,                
+                //'first_id' => $matchingCategories[0]['id'] ?? null,                
                 'matching_categories' => $matchingCategories,
             ];
             $requestMade = true;

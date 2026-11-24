@@ -5,15 +5,12 @@ declare(strict_types=1);
 use App\AllegroOAuth;
 use App\Services\Rest\AllegroCategoryParameters;
 use App\Services\Rest\CategoryDetailsJsonWriter;
+use App\Services\Rest\CategoryDetailsJsonRead;
 
 require_once dirname(__DIR__, 3) . '/config.php';
 
-//$categories = require dirname(__DIR__, 3) . '/dane/allegro_categories.php';
+$categories = (new CategoryDetailsJsonRead)->getFirstFindingCategory(dirname(__DIR__, 3) . '/dane/kategorie_allegro.json');
 
-$outputPath = dirname(__DIR__, 3) . '/dane/kategorie_allegro.json';
-
-
-die('_______________________');
 
 try {
     echo "Pobieram token Allegro...\n";
@@ -21,13 +18,13 @@ try {
     $accessToken = $oauth->getAccessToken();
 
     $categoryParameters = new AllegroCategoryParameters($config['api_url'], $accessToken);
+    echo "API: GET /sale/categories/{categoryId}/parameters". "\n";
     $parametersById = $categoryParameters->getByCategoryIds(array_column($categories, 'id'));
     $parametersById = array_column($parametersById, 'parameters', 'id');
-
-    foreach ($categories as &$category) {
-        $category['parameters'] = $parametersById[$category['id']] ?? [];
+    
+    foreach ($categories as $key => $category) {
+        $categories[$key]['parameters'] = $parametersById[$category['id']] ?? [];
     }
-    unset($category);
 
     $outputPath = dirname(__DIR__, 3) . '/dane/parametry_kategorii_allegro.json';
     $output = [

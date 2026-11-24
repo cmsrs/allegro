@@ -23,6 +23,8 @@ try {
     $accessToken = $oauth->getAccessToken();
 
     $matcher = new AllegroCategoryMatcher($config['api_url'], $accessToken);
+
+    echo "API: GET /sale/matching-categories". "\n";
     $results = $matcher->matchCategories($categoryNames);
 
     $outputDirectory = dirname(__DIR__, 3) . '/dane';

@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
-require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
+require_once dirname(__DIR__, 3) . '/vendor/autoload.php';
 
 const CSV_COLUMNS = [
     'GTIN' => ['gtin', 'ean'],

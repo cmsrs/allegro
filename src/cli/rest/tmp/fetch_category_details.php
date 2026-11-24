@@ -5,10 +5,11 @@ declare(strict_types=1);
 use App\AllegroOAuth;
 use App\Services\Rest\AllegroCategoryProductParameters;
 use App\Services\Rest\CategoryDetailsJsonWriter;
+use App\Services\Rest\CategoryDetailsJsonRead;
 
-require_once dirname(__DIR__, 3) . '/config.php';
+require_once dirname(__DIR__, 4) . '/config.php';
 
-$categories = require dirname(__DIR__, 3) . '/dane/allegro_categories.php';
+$categories = (new CategoryDetailsJsonRead)->getFirstFindingCategory(dirname(__DIR__, 4) . '/dane/kategorie_allegro.json');
 
 try {
     echo "Pobieram token Allegro...\n";
