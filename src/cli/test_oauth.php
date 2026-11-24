@@ -17,8 +17,11 @@ try {
     echo "Długość tokena: " . strlen($token) . "\n";
 
 } catch (Throwable $e) {
-    echo  "Run: php ./src/cli/authorize_device.php" . "\n";
+    echo " ";
+    echo "  RUN: php ./src/cli/authorize_device.php  ";
+    echo " ";
     echo "BŁĄD: " . $e->getMessage() . "\n";
+    
 
 }
 

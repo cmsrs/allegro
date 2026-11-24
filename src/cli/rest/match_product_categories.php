@@ -6,7 +6,7 @@ use App\AllegroOAuth;
 use App\Services\GetProductsData;
 use App\Services\Rest\AllegroCategoryMatcher;
 
-require_once dirname(__DIR__, 2) . '/config.php';
+require_once dirname(__DIR__, 3) . '/config.php';
 
 try {
     $productsData = new GetProductsData();
@@ -25,7 +25,7 @@ try {
     $matcher = new AllegroCategoryMatcher($config['api_url'], $accessToken);
     $results = $matcher->matchCategories($categoryNames);
 
-    $outputDirectory = dirname(__DIR__, 2) . '/data/dane';
+    $outputDirectory = dirname(__DIR__, 3) . '/dane';
     if (!is_dir($outputDirectory) && !mkdir($outputDirectory, 0775, true) && !is_dir($outputDirectory)) {
         throw new RuntimeException('Nie udało się utworzyć katalogu: ' . $outputDirectory);
     }
@@ -34,7 +34,7 @@ try {
     $json = json_encode(
         [
             'generated_at' => date(DATE_ATOM),
-            'source' => 'data/dane.json',
+            'source' => 'produkty/dane.json',
             'count' => count($results),
             'categories' => $results,
         ],

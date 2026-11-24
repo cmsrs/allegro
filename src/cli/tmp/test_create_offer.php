@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+//skrypt testowy!!!
+
 /**
  * Tworzy przykładową ofertę w Allegro Sandbox.
  *

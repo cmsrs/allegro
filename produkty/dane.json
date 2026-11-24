@@ -1,0 +1,45 @@
+{
+    "version": 1,
+    "generated_at": "2026-11-21T13:26:18+00:00",
+    "source": "dane.xlsx",
+    "summary": {
+        "total": 1,
+        "imported": 1,
+        "errors": 0
+    },
+    "products": [
+        {
+            "id": "213189981",
+            "id_w_sklepie": "16194688002",
+            "nazwa": "perfumy cmsRS",
+            "kategoria": "Uroda / Perfumy i wody / Zapachy unisex / Wody perfumowane",
+            "sku": null,
+            "ean": "8684266587455",
+            "cena": 179.99,
+            "cena_sprzedazy": 177,
+            "zdjecia": [
+                {
+                    "name" : "test1.jpg"
+                }
+            ]
+        },
+        {
+            "id": "213189999",
+            "id_w_sklepie": "16194688099",
+            "nazwa": "odswiezacz powietrza cmsRS",
+            "kategoria":   "Supermarket / Utrzymanie czystości / Odświeżacze powietrza",
+            "sku": null,
+            "ean": "8684266587499",
+            "cena": 79.99,
+            "cena_sprzedazy": 77,
+            "zdjecia": [
+                {
+                    "name" : "test3.jpg"
+                }
+            ]
+        }
+
+
+    ]
+}
+

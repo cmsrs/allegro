@@ -3,28 +3,29 @@
 declare(strict_types=1);
 
 use App\AllegroOAuth;
-use App\Services\Rest\AllegroCategoryParameters;
+use App\Services\Rest\AllegroCategoryProductParameters;
 use App\Services\Rest\CategoryDetailsJsonWriter;
 
-require_once dirname(__DIR__, 2) . '/config.php';
+require_once dirname(__DIR__, 3) . '/config.php';
 
-$categories = require dirname(__DIR__, 2) . '/config/allegro_categories.php';
+$categories = require dirname(__DIR__, 3) . '/dane/allegro_categories.php';
 
 try {
     echo "Pobieram token Allegro...\n";
     $oauth = new AllegroOAuth($config);
     $accessToken = $oauth->getAccessToken();
 
-    $categoryParameters = new AllegroCategoryParameters($config['api_url'], $accessToken);
+    $categoryParameters = new AllegroCategoryProductParameters($config['api_url'], $accessToken);
     $parametersById = $categoryParameters->getByCategoryIds(array_column($categories, 'id'));
     $parametersById = array_column($parametersById, 'parameters', 'id');
 
     foreach ($categories as &$category) {
-        $category['parameters'] = $parametersById[$category['id']] ?? [];
+        $category['product_parameters'] = $parametersById[$category['id']] ?? [];
     }
     unset($category);
 
-    $outputPath = dirname(__DIR__, 2) . '/data/dane/parametry_kategorii_allegro.json';
+    $outputDirectory = dirname(__DIR__, 2) . '/dane';
+    $outputPath = $outputDirectory . '/parametry_produktowe_kategorii_allegro.json';
     $output = [
         'generated_at' => date(DATE_ATOM),
         'count' => count($categories),
@@ -33,13 +34,13 @@ try {
 
     (new CategoryDetailsJsonWriter())->write($outputPath, $output);
 
-    echo "\nPobrane parametry kategorii/ofert:\n";
+    echo "\nPobrane parametry produktowe:\n";
     foreach ($categories as $category) {
         echo sprintf(
             "ID %s | %s | parametrów: %d\n",
             $category['id'],
             $category['name'],
-            count($category['parameters'])
+            count($category['product_parameters'])
         );
     }
     echo sprintf("Zapisano JSON: %s\n", $outputPath);

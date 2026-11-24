@@ -11,7 +11,7 @@ class GetProductsData
 
     public function __construct(?string $filePath = null)
     {
-        $this->filePath = $filePath ?? dirname(__DIR__, 2) . '/data/dane.json';
+        $this->filePath = $filePath ?? dirname(__DIR__, 2) . '/produkty/dane.json';
     }
 
     /**

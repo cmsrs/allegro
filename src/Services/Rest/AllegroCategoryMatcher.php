@@ -33,6 +33,7 @@ class AllegroCategoryMatcher
     {
         $results = [];
         $requestMade = false;
+        $ids = [];
 
         foreach ($categoryNames as $categoryName) {
             $categoryName = trim($categoryName);
@@ -76,6 +77,7 @@ class AllegroCategoryMatcher
                 throw new RuntimeException(sprintf('Nieprawidłowa odpowiedź Allegro dla kategorii "%s".', $categoryName));
             }
 
+
             $matchingCategories = $data['matchingCategories'] ?? [];
             if (!is_array($matchingCategories)) {
                 $matchingCategories = [];
@@ -83,6 +85,7 @@ class AllegroCategoryMatcher
 
             $results[] = [
                 'source_category' => $categoryName,
+                'first_id' => $matchingCategories[0]['id'] ?? null,                
                 'matching_categories' => $matchingCategories,
             ];
             $requestMade = true;

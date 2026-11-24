@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+//skrypt testowy!!!
+
 require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../../src/AllegroOAuth.php';
 
