@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Services\GetProductsData;
 use App\AllegroOAuth;
+use App\Services\Rest\AllegroImageUploader;
 use App\Services\Rest\AllegroProductFinder;
 
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
@@ -17,6 +18,8 @@ try {
     $oauth = new AllegroOAuth($config);
     $accessToken = $oauth->getAccessToken();
     $productFinder = new AllegroProductFinder($config['api_url'], $accessToken);
+    $imageUploader = new AllegroImageUploader($config['upload_url'], $accessToken);
+    $imagesDirectory = dirname(__DIR__, 2) . '/produkty';
 
     foreach ($products as $product) {
         if (!is_array($product)) {
@@ -37,6 +40,27 @@ try {
 
         if ($matches === []) {
             echo sprintf("NIE ZNALEZIONO produktu w katalogu Allegro dla EAN %s.\n", $ean);
+
+            $images = $product['zdjecia'] ?? [];
+            if (!is_array($images) || $images === []) {
+                echo "  Brak zdjęć do wysłania.\n";
+                continue;
+            }
+
+            echo "API: POST /sale/images	Upload zdjęć";
+            foreach ($images as $image) {
+                $imageName = is_array($image) ? trim((string) ($image['name'] ?? '')) : '';
+                if ($imageName === '') {
+                    echo "  Pomijam wpis zdjęcia bez nazwy.\n";
+                    continue;
+                }
+
+                $imagePath = $imagesDirectory . '/' . basename($imageName);
+                echo sprintf("  Wysyłam zdjęcie %s...\n", basename($imageName));
+                $imageUrl = $imageUploader->upload($imagePath);
+                echo sprintf("  Wysłano: %s\n", $imageUrl);
+            }
+
             continue;
         }
 
