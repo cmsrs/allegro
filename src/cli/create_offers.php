@@ -32,6 +32,7 @@ try {
         }
 
         echo sprintf("Sprawdzam EAN %s | %s...\n", $ean, $productName);
+        echo "API: GET /sale/products?phrase=EAN&mode=GTIN	Wyszukiwanie produktu po EAN\n";
         $matches = $productFinder->findByEan($ean);
 
         if ($matches === []) {
