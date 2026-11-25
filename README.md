@@ -679,11 +679,16 @@ API: GET /sale/product-offers/7782592482	Kontrola utworzonej oferty
 php src/cli/activate_offers.php
 ```
 
-![Panel Allegro](panel_allegro.png)
+#### panel allegro z ofertami
+
+![Panel Allegro](imgs/allegro_panel.png)
+
+#### oferta na stronie frontowej (status ACTIVE)
+
+![Panel Allegro](imgs/allegro_front.png)
 
 
-
-### Lista endpointów Allegro API wykorzystanych do importowania produktów i tworzenia ofert
+### Lista endpointów Allegro API wykorzystanych do tworzenia ofert
 
 Integracja wykorzystuje poniższe endpointy Allegro API do wyszukiwania produktów w katalogu, przygotowania danych, tworzenia nowych produktów oraz wystawiania i aktualizacji ofert.
 
