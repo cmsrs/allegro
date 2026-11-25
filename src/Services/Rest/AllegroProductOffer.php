@@ -137,6 +137,203 @@ class AllegroProductOffer
     }
 
     /**
+     * Activates an existing inactive offer and waits for Allegro's async operation.
+     *
+     * @return array<string, mixed>
+     */
+    public function activate(string $offerId, int $timeoutSeconds = 120, ?callable $onProgress = null): array
+    {
+        $offerId = trim($offerId);
+        if ($offerId === '') {
+            throw new RuntimeException('ID oferty jest wymagane do jej aktywacji.');
+        }
+
+        $offer = $this->getById($offerId);
+        $status = (string) ($offer['publication']['status'] ?? '');
+        if ($status === 'ACTIVE') {
+            return $offer;
+        }
+        if ($status !== 'INACTIVE') {
+            throw new RuntimeException(sprintf(
+                'Nie można aktywować oferty %s ze statusem %s.',
+                $offerId,
+                $status !== '' ? $status : 'nieznanym'
+            ));
+        }
+
+        $validationErrors = $offer['validation']['errors'] ?? [];
+        if (is_array($validationErrors) && $validationErrors !== []) {
+            throw new RuntimeException(sprintf(
+                'Oferta %s ma błędy walidacji i nie może zostać aktywowana: %s',
+                $offerId,
+                json_encode($validationErrors, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '(nieznane błędy)'
+            ));
+        }
+
+        $path = '/sale/product-offers/' . rawurlencode($offerId);
+        $requestPath = rtrim($this->apiUrl, '/') . $path;
+        try {
+            $patchResponse = $this->client->request('PATCH', $requestPath, [
+                'http_errors' => false,
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->accessToken,
+                    'Accept' => 'application/vnd.allegro.public.v1+json',
+                    'Accept-Language' => 'pl-PL',
+                    'Content-Type' => 'application/vnd.allegro.public.v1+json',
+                ],
+                'json' => ['publication' => ['status' => 'ACTIVE']],
+            ]);
+            $patchStatusCode = $patchResponse->getStatusCode();
+            $patchBody = $patchResponse->getBody()->getContents();
+            $patchData = $patchBody === '' ? [] : json_decode($patchBody, true, 512, JSON_THROW_ON_ERROR);
+            $location = $patchResponse->getHeaderLine('Location');
+        } catch (GuzzleException | JsonException $e) {
+            throw new RuntimeException(sprintf('Błąd PATCH %s: %s', $path, $e->getMessage()), 0, $e);
+        }
+
+        if (!is_array($patchData)) {
+            throw new RuntimeException(sprintf('Nieprawidłowa odpowiedź JSON z PATCH %s.', $path));
+        }
+        if ($patchStatusCode < 200 || $patchStatusCode >= 300) {
+            if ($this->hasInProgressTaskLimitError($patchData)) {
+                return $this->waitForActiveStatus($offerId, $timeoutSeconds, $onProgress);
+            }
+
+            throw new RuntimeException(sprintf(
+                'PATCH %s zwrócił HTTP %d: %s',
+                $path,
+                $patchStatusCode,
+                json_encode($patchData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '(brak treści)'
+            ));
+        }
+
+        $operationId = trim((string) ($patchData['operation']['id'] ?? ''));
+        if ($operationId === '' && $location !== '') {
+            $locationPath = parse_url($location, PHP_URL_PATH);
+            if (is_string($locationPath)
+                && preg_match('~/operations/([^/]+)$~', $locationPath, $matches) === 1
+            ) {
+                $operationId = rawurldecode($matches[1]);
+            }
+        }
+        if ($operationId === '') {
+            $offer = $this->getById($offerId);
+            if (($offer['publication']['status'] ?? null) !== 'ACTIVE') {
+                return $this->waitForActiveStatus($offerId, $timeoutSeconds, $onProgress);
+            }
+
+            return $offer;
+        }
+
+        $operationPath = $path . '/operations/' . rawurlencode($operationId);
+        $startedAt = time();
+        $deadline = $startedAt + max(1, $timeoutSeconds);
+        $lastProgressAt = $startedAt;
+        do {
+            sleep(2);
+            try {
+                $operation = $this->requestJson('GET', $operationPath);
+            } catch (RuntimeException $e) {
+                if ($this->exceptionIsInProgressTaskLimit($e)) {
+                    return $this->waitForActiveStatus($offerId, max(1, $deadline - $startedAt), $onProgress, $startedAt);
+                }
+
+                throw $e;
+            }
+            $operationStatus = strtoupper((string) ($operation['operation']['status'] ?? ''));
+            if (in_array($operationStatus, ['FAILED', 'ERROR'], true)) {
+                throw new RuntimeException(sprintf(
+                    'Aktywacja oferty %s nie powiodła się: %s',
+                    $offerId,
+                    json_encode($operation, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '(brak szczegółów)'
+                ));
+            }
+
+            if ($operationStatus === 'IN_PROGRESS') {
+                $now = time();
+                if ($onProgress !== null && $now - $lastProgressAt >= 10) {
+                    $onProgress($operationStatus, $now - $startedAt);
+                    $lastProgressAt = $now;
+                }
+                continue;
+            }
+
+            $offer = $this->getById($offerId);
+            if (($offer['publication']['status'] ?? null) === 'ACTIVE') {
+                return $offer;
+            }
+        } while (time() < $deadline);
+
+        throw new RuntimeException(sprintf(
+            'Przekroczono czas oczekiwania na aktywację oferty %s. Ostatni status: %s.',
+            $offerId,
+            $offer['publication']['status'] ?? 'nieznany'
+        ));
+    }
+
+    /**
+     * Waits for an earlier activation request to finish without sending another PATCH.
+     *
+     * @return array<string, mixed>
+     */
+    private function waitForActiveStatus(
+        string $offerId,
+        int $timeoutSeconds,
+        ?callable $onProgress,
+        ?int $startedAt = null
+    ): array {
+        $startedAt ??= time();
+        $deadline = $startedAt + max(1, $timeoutSeconds);
+        $lastProgressAt = 0;
+        $offer = [];
+
+        do {
+            sleep(5);
+            $offer = $this->getById($offerId);
+            $status = strtoupper((string) ($offer['publication']['status'] ?? ''));
+            if ($status === 'ACTIVE') {
+                return $offer;
+            }
+            if (!in_array($status, ['INACTIVE', 'ACTIVATING'], true)) {
+                throw new RuntimeException(sprintf(
+                    'Oczekiwanie na aktywację oferty %s przerwane. Status oferty: %s.',
+                    $offerId,
+                    $status !== '' ? $status : 'nieznany'
+                ));
+            }
+
+            $now = time();
+            if ($onProgress !== null && $now - $lastProgressAt >= 10) {
+                $onProgress('WAITING_FOR_PREVIOUS_STATUS_CHANGE', $now - $startedAt);
+                $lastProgressAt = $now;
+            }
+        } while (time() < $deadline);
+
+        throw new RuntimeException(sprintf(
+            'Przekroczono czas oczekiwania na aktywację oferty %s. Ostatni status: %s.',
+            $offerId,
+            $offer['publication']['status'] ?? 'nieznany'
+        ));
+    }
+
+    /** @param array<string, mixed> $response */
+    private function hasInProgressTaskLimitError(array $response): bool
+    {
+        foreach ($response['errors'] ?? [] as $error) {
+            if (is_array($error) && ($error['code'] ?? null) === 'InProgressTaskLimitReachedException') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function exceptionIsInProgressTaskLimit(RuntimeException $exception): bool
+    {
+        return str_contains($exception->getMessage(), 'InProgressTaskLimitReachedException');
+    }
+
+    /**
      * Updates an existing inactive offer with its delivery rate and GPSR producer.
      * The existing productSet is retained and its catalog product ID is re-sent.
      *

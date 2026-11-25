@@ -673,3 +673,69 @@ API: GET /sale/product-offers/7782592482	Kontrola utworzonej oferty
 }
 ```
 
+### Akrywacja ofert
+
+```bash
+php src/cli/activate_offers.php
+```
+
+![Panel Allegro](panel_allegro.png)
+
+
+
+### Lista endpointów Allegro API wykorzystanych do importowania produktów i tworzenia ofert
+
+Integracja wykorzystuje poniższe endpointy Allegro API do wyszukiwania produktów w katalogu, przygotowania danych, tworzenia nowych produktów oraz wystawiania i aktualizacji ofert.
+
+#### 1. Przygotowanie danych – `./create_dictionary.sh`
+
+Skrypt odpowiada za pobranie danych niezbędnych do przygotowania produktów i ofert.
+
+| Lp. | Metoda i endpoint | Opis |
+|---:|---|---|
+| 1 | `GET /sale/matching-categories` | Sugerowanie kategorii dla produktu |
+| 2 | `GET /sale/categories/{id}` | Pobranie informacji o kategorii i sprawdzenie, czy jest kategorią końcową (liściem) |
+| 3 | `GET /sale/categories/{id}/parameters` | Pobranie parametrów i wymagań przypisanych do kategorii |
+| 4 | `GET /sale/products?phrase=EAN&mode=GTIN` | Wyszukiwanie produktu w katalogu Allegro na podstawie kodu EAN |
+| 5 | `GET /sale/products/{productId}` | Pobranie szczegółowych danych produktu znalezionego w katalogu |
+| 6 | `GET /sale/categories/{id}/product-parameters` | Pobranie parametrów wymaganych do utworzenia nowego produktu katalogowego |
+| 7 | `POST /sale/images` | Przesyłanie zdjęć produktu do Allegro |
+| 8 | `GET /sale/shipping-rates` | Pobranie dostępnych cenników dostawy |
+| 9 | `GET /after-sales-service-conditions/return-policies` | Pobranie dostępnych warunków zwrotów |
+| 10 | `GET /after-sales-service-conditions/implied-warranties` | Pobranie dostępnych warunków reklamacji |
+
+#### 2. Tworzenie i zarządzanie ofertami – `./create_offer.sh`
+
+Skrypt odpowiada za utworzenie produktu (jeśli nie istnieje jeszcze w katalogu Allegro), a następnie wystawienie oferty sprzedaży.
+
+| Lp. | Metoda i endpoint | Opis |
+|---:|---|---|
+| 1 | `POST /sale/product-proposals` | Utworzenie propozycji nowego produktu katalogowego, jeśli produkt nie istnieje w katalogu |
+| 2 | `GET /sale/products/{productId}` | Weryfikacja danych utworzonego lub znalezionego produktu |
+| 3 | `POST /sale/product-offers` | Utworzenie nowej oferty sprzedaży na Allegro |
+| 4 | `GET /sale/product-offers/{offerId}` | Pobranie i kontrola danych utworzonej oferty |
+| 5 | `PATCH /sale/product-offers/{offerId}` | Aktualizacja lub poprawianie istniejącej oferty |
+
+Po utworzeniu oferty należy ją aktywować, ustawiając status publikacji na `ACTIVE`.
+
+#### 3. Konfiguracja GPSR i danych dodatkowych – operacje opcjonalne
+
+Przed rozpoczęciem automatycznego wystawiania ofert część danych można skonfigurować jednorazowo w panelu administracyjnym Allegro lub za pomocą API.
+
+| Metoda i endpoint | Opis |
+|---|---|
+| `POST /sale/responsible-producers` | Dodawanie danych producenta wymaganych w ramach GPSR |
+| `GET /sale/responsible-producers` | Pobieranie listy zarejestrowanych producentów |
+| `POST /sale/responsible-persons` | Dodawanie danych osób odpowiedzialnych za produkt |
+| `GET /sale/responsible-persons` | Pobieranie listy osób odpowiedzialnych |
+| `POST /sale/shipping-rates` | Tworzenie cennika dostawy |
+
+Dane producentów i osób odpowiedzialnych GPSR można zarejestrować wcześniej, a następnie wykorzystywać ich identyfikatory podczas tworzenia kolejnych ofert.
+
+Cenniki dostawy również można przygotować wcześniej i wykorzystywać przy wystawianiu ofert.
+
+---
+
+**Uwaga:** Powyższa lista przedstawia endpointy wykorzystane w procesie integracji. Nie wszystkie operacje są wykonywane przy każdym imporcie produktu – część służy do jednorazowego przygotowania słowników i konfiguracji Allegro.
+
+
