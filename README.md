@@ -15,7 +15,13 @@ Ten sposób autoryzacji:
 - nie wymaga konfigurowania `redirect_uri`,
 - umożliwia autoryzację bezpośrednio z poziomu skryptu PHP.
 
-## 2. Autoryzacja i pobranie tokenów
+## 2. Instalacja, autoryzacja i pobranie tokenów
+
+Instalacja:
+
+```bash
+composer install
+```
 
 Po utworzeniu aplikacji Allegro należy uzupełnić dane dostępowe w pliku konfiguracyjnym `.env`.
 
