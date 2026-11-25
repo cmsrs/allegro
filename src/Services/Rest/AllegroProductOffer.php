@@ -51,12 +51,30 @@ class AllegroProductOffer
             throw new RuntimeException(sprintf('Stan magazynowy produktu "%s" musi wynosić co najmniej 1.', $name));
         }
 
+        $shippingRateId = trim((string) ($product['allegro_shipping_rate_id'] ?? ''));
+        $responsibleProducerId = trim((string) ($product['allegro_responsible_producer_id'] ?? ''));
+        if ($shippingRateId === '' || $responsibleProducerId === '') {
+            $missing = [];
+            if ($shippingRateId === '') {
+                $missing[] = 'allegro_shipping_rate_id';
+            }
+            if ($responsibleProducerId === '') {
+                $missing[] = 'allegro_responsible_producer_id';
+            }
+            throw new RuntimeException(sprintf(
+                'Brakuje danych wymaganych do kompletnej oferty "%s": %s. Uzupełnij je w produkty/dane.json.',
+                $name,
+                implode(', ', $missing)
+            ));
+        }
+
         $categoryId = $this->resolveCategoryId($product, $catalogDirectory);
         $payload = [
             'name' => $name,
             'category' => ['id' => $categoryId],
             'productSet' => [[
                 'product' => ['id' => $productId],
+                'responsibleProducer' => ['type' => 'ID', 'id' => $responsibleProducerId],
             ]],
             'sellingMode' => [
                 'format' => 'BUY_NOW',
@@ -67,6 +85,7 @@ class AllegroProductOffer
             ],
             'stock' => ['available' => (int) $stock],
             'publication' => ['status' => 'INACTIVE'],
+            'delivery' => ['shippingRates' => ['id' => $shippingRateId]],
         ];
 
         $imageUrls = [];
@@ -115,6 +134,80 @@ class AllegroProductOffer
         }
 
         return $this->requestJson('GET', '/sale/product-offers/' . rawurlencode($offerId));
+    }
+
+    /**
+     * Updates an existing inactive offer with its delivery rate and GPSR producer.
+     * The existing productSet is retained and its catalog product ID is re-sent.
+     *
+     * @param array<string, mixed> $product
+     * @return array{offer_id: string, offer: array<string, mixed>, verification: array<string, mixed>|null, verification_error: string|null}
+     */
+    public function completeExistingDraft(string $offerId, array $product): array
+    {
+        $offerId = trim($offerId);
+        $shippingRateId = trim((string) ($product['allegro_shipping_rate_id'] ?? ''));
+        $responsibleProducerId = trim((string) ($product['allegro_responsible_producer_id'] ?? ''));
+        if ($offerId === '' || $shippingRateId === '' || $responsibleProducerId === '') {
+            throw new RuntimeException('Do uzupełnienia szkicu potrzebne są ID oferty, cennika dostawy i producenta Allegro.');
+        }
+
+        $currentOffer = $this->getById($offerId);
+        $currentProductSet = $currentOffer['productSet'] ?? [];
+        if (!is_array($currentProductSet) || $currentProductSet === []) {
+            throw new RuntimeException(sprintf('Oferta %s nie zawiera produktu w polu productSet.', $offerId));
+        }
+
+        $productSet = [];
+        foreach ($currentProductSet as $index => $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $catalogProductId = trim((string) ($item['product']['id'] ?? ''));
+            if ($catalogProductId === '') {
+                throw new RuntimeException(sprintf('Nie można zachować produktu w zestawie oferty %s.', $offerId));
+            }
+
+            $entry = [
+                'product' => ['id' => $catalogProductId],
+                'quantity' => $item['quantity'] ?? ['value' => 1],
+            ];
+            if ($index === 0) {
+                $entry['responsibleProducer'] = ['type' => 'ID', 'id' => $responsibleProducerId];
+            } elseif (is_array($item['responsibleProducer'] ?? null)) {
+                $entry['responsibleProducer'] = $item['responsibleProducer'];
+            }
+            if (is_array($item['responsiblePerson'] ?? null)) {
+                $entry['responsiblePerson'] = $item['responsiblePerson'];
+            }
+
+            $productSet[] = $entry;
+        }
+
+        $payload = [
+            'productSet' => $productSet,
+            'delivery' => ['shippingRates' => ['id' => $shippingRateId]],
+        ];
+        if (is_string($currentOffer['delivery']['handlingTime'] ?? null)) {
+            $payload['delivery']['handlingTime'] = $currentOffer['delivery']['handlingTime'];
+        }
+
+        $updatedOffer = $this->requestJson('PATCH', '/sale/product-offers/' . rawurlencode($offerId), $payload);
+        try {
+            $verifiedOffer = $this->getById($offerId);
+            $verificationError = null;
+        } catch (RuntimeException $e) {
+            $verifiedOffer = null;
+            $verificationError = $e->getMessage();
+        }
+
+        return [
+            'offer_id' => $offerId,
+            'offer' => $updatedOffer,
+            'verification' => $verifiedOffer,
+            'verification_error' => $verificationError,
+        ];
     }
 
     /** @param array<string, mixed> $product */

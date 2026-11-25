@@ -192,10 +192,35 @@ try {
 
         if ($registeredOffer !== null) {
             $offerId = (string) $registeredOffer['offer_id'];
-            echo sprintf("API: GET /sale/product-offers/%s\tKontrola zapisanej oferty\n", $offerId);
-            $existingOffer = $productOffer->getById($offerId);
-            echo sprintf("Oferta już istnieje. ID: %s\n", $offerId);
-            echo json_encode($existingOffer, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL;
+            $missingOfferData = [];
+            if (trim((string) ($product['allegro_shipping_rate_id'] ?? '')) === '') {
+                $missingOfferData[] = 'allegro_shipping_rate_id';
+            }
+            if (trim((string) ($product['allegro_responsible_producer_id'] ?? '')) === '') {
+                $missingOfferData[] = 'allegro_responsible_producer_id';
+            }
+
+            if ($missingOfferData !== []) {
+                echo sprintf(
+                    "Szkic oferty %s już istnieje, ale nie mogę go uzupełnić. Brak pól w produkty/dane.json: %s\n",
+                    $offerId,
+                    implode(', ', $missingOfferData)
+                );
+                echo sprintf("API: GET /sale/product-offers/%s\tKontrola zapisanej oferty\n", $offerId);
+                $existingOffer = $productOffer->getById($offerId);
+                echo json_encode($existingOffer, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL;
+                continue;
+            }
+
+            echo sprintf("API: PATCH /sale/product-offers/%s\tUzupełnienie szkicu\n", $offerId);
+            $completionResult = $productOffer->completeExistingDraft($offerId, $product);
+            echo sprintf("Uzupełniono szkic oferty. ID: %s\n", $offerId);
+            if ($completionResult['verification'] !== null) {
+                echo "API: GET /sale/product-offers/{$offerId}\tKontrola uzupełnionej oferty\n";
+                echo json_encode($completionResult['verification'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL;
+            } else {
+                echo sprintf("Nie udało się pobrać oferty do kontroli: %s\n", $completionResult['verification_error']);
+            }
             continue;
         }
 
