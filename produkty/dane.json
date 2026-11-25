@@ -20,7 +20,7 @@
             "marka": "Clive&Keira",
             "pojemnosc": "30 ml",
             "allegro_shipping_rate_id": null,
-            "allegro_responsible_producer_id": null,
+            "allegro_responsible_producer_id": "2d0a3849-7ae5-40b6-9e11-bb677c249065",
             "zdjecia": [
                 {
                     "name" : "test1.jpg"
@@ -41,7 +41,7 @@
             "rodzaj": "spray (aerozol)",
             "nazwa_handlowa": "Odświeżacz powietrza cmsRS",
             "allegro_shipping_rate_id": null,
-            "allegro_responsible_producer_id": null,
+            "allegro_responsible_producer_id": "2d0a3849-7ae5-40b6-9e11-bb677c249065",
             "zdjecia": [
                 {
                     "name" : "test3.jpg"
