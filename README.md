@@ -54,6 +54,8 @@ Testy pozwalają sprawdzić poprawność działania poszczególnych elementów a
 
 ## 4. Operacje na produktach Allegro - Automatyzacja procesu importu produktów na podstawie pliku: ./produkty/dane.json
 
+### dane producenta: dodaj firme i osobe odpowiedzialna
+
 ### utworzenie słowników w ./dane : 
 
 ```bash
@@ -105,15 +107,14 @@ Zapisano JSON: /home/rob/allegro/allegro/dane/warunki_reklamacji_allegro.json
 
 /home/rob/allegro/allegro/src/cli/dictionaries/fetch_responsible_producers.php
 API: GET /sale/responsible-producers
-Pobrano producentów odpowiedzialnych: 0
+Pobrano producentów odpowiedzialnych: 1
 Zapisano JSON: /home/rob/allegro/allegro/dane/producenci_odpowiedzialni_allegro.json
 
 /home/rob/allegro/allegro/src/cli/dictionaries/fetch_responsible_persons.php
 API: GET /sale/responsible-persons
-Pobrano osób odpowiedzialnych: 0
+Pobrano osób odpowiedzialnych: 1
 Zapisano JSON: /home/rob/allegro/allegro/dane/osoby_odpowiedzialne_allegro.json
 ```
-
 
 ### wywołanie, dodanie produktów do allegro:
 
