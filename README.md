@@ -102,6 +102,16 @@ Zapisano JSON: /home/rob/allegro/allegro/dane/warunki_zwrotow_allegro.json
 API: GET /after-sales-service-conditions/implied-warranties
 Pobrano warunków reklamacji: 1
 Zapisano JSON: /home/rob/allegro/allegro/dane/warunki_reklamacji_allegro.json
+
+/home/rob/allegro/allegro/src/cli/dictionaries/fetch_responsible_producers.php
+API: GET /sale/responsible-producers
+Pobrano producentów odpowiedzialnych: 0
+Zapisano JSON: /home/rob/allegro/allegro/dane/producenci_odpowiedzialni_allegro.json
+
+/home/rob/allegro/allegro/src/cli/dictionaries/fetch_responsible_persons.php
+API: GET /sale/responsible-persons
+Pobrano osób odpowiedzialnych: 0
+Zapisano JSON: /home/rob/allegro/allegro/dane/osoby_odpowiedzialne_allegro.json
 ```
 
 

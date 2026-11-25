@@ -9,5 +9,5 @@ php  src/cli/dictionaries/fetch_category_product_parameters.php
 php  src/cli/dictionaries/fetch_shipping_rates.php
 php  src/cli/dictionaries/fetch_return_policies.php
 php  src/cli/dictionaries/fetch_implied_warranties.php
-
-
+php src/cli/dictionaries/fetch_responsible_producers.php
+php src/cli/dictionaries/fetch_responsible_persons.php
