@@ -1,6 +1,6 @@
-# Allegro – integracja i import danych
+# Allegro – import produktów i ofert
 
-Projekt służy do integracji z API Allegro. Jego celem jest pobieranie danych, przetwarzanie ich oraz tworzenie produktów w Allegro.
+Projekt umożliwia import produktów oraz ofert sprzedażowych do serwisu Allegro na podstawie danych zapisanych w pliku JSON. Jego zadaniem jest odczytanie, przetworzenie i przygotowanie danych, a następnie utworzenie odpowiednich produktów i ofert na platformie Allegro za pośrednictwem API.
 
 ## 1. Konfiguracja Allegro OAuth
 
