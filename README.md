@@ -115,7 +115,7 @@ $ cat  produkty/dane.json
 
 ```
 
-### dane producenta: dodaj firme i osobe odpowiedzialna oraz uzupełnij cennik dostawy
+### dodaj: dane producenta - firme i osobe odpowiedzialna oraz uzupełnij cennik dostawy
 
 ### utworzenie słowników w ./dane : 
 
