@@ -13,6 +13,7 @@ require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 require_once dirname(__DIR__, 2) . '/config.php';
 
 try {
+    echo "\n" . __FILE__ . PHP_EOL;    
     $service = new GetProductsData();
     $data = $service->getData();
     $products = $data['products'] ?? [];
@@ -39,6 +40,7 @@ try {
         if (!is_array($product)) {
             continue;
         }
+        echo "\n";        
 
         $ean = trim((string) ($product['ean'] ?? ''));
         $productName = (string) ($product['nazwa'] ?? 'bez nazwy');
@@ -55,6 +57,16 @@ try {
         if ($matches === []) {
             echo sprintf("NIE ZNALEZIONO produktu w katalogu Allegro dla EAN %s.\n", $ean);
 
+            $nameWordCount = preg_match_all('/\S+/u', trim($productName));
+            if ($nameWordCount === false || $nameWordCount < 3) {
+                echo sprintf(
+                    "POMINIĘTO | %s | nazwa produktu musi mieć co najmniej 3 wyrazy (obecnie: %d). Uzupełnij pole \"nazwa\" w produkty/dane.json.\n",
+                    $productName,
+                    max(0, $nameWordCount ?: 0)
+                );
+                continue;
+            }
+
             $images = $product['zdjecia'] ?? [];
             if (!is_array($images) || $images === []) {
                 echo "  Brak zdjęć do wysłania.\n";
@@ -67,6 +79,29 @@ try {
                 $imageName = is_array($image) ? trim((string) ($image['name'] ?? '')) : '';
                 if ($imageName === '') {
                     echo "  Pomijam wpis zdjęcia bez nazwy.\n";
+                    continue;
+                }
+
+                $reusableLocation = null;
+                foreach (array_reverse($uploadedImages) as $savedImage) {
+                    if (!is_array($savedImage)
+                        || (string) ($savedImage['ean'] ?? '') !== $ean
+                        || basename((string) ($savedImage['original_name'] ?? '')) !== basename($imageName)
+                    ) {
+                        continue;
+                    }
+
+                    $expiresAt = strtotime((string) ($savedImage['expires_at'] ?? ''));
+                    $savedLocation = trim((string) ($savedImage['allegro_location'] ?? ''));
+                    if ($expiresAt !== false && $expiresAt > time() && $savedLocation !== '') {
+                        $reusableLocation = $savedLocation;
+                        break;
+                    }
+                }
+
+                if ($reusableLocation !== null) {
+                    $imageLocations[] = $reusableLocation;
+                    echo sprintf("  Używam wcześniej wysłanego, nadal ważnego zdjęcia: %s\n", $reusableLocation);
                     continue;
                 }
 

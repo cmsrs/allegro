@@ -26,6 +26,7 @@ const JSON_COLUMNS = [
     'zewnetrzne_grupy_wariantowe',
     'opis',
     'czas_wysylki',
+    'parametry',
 ];
 
 const BOOLEAN_COLUMNS = [
@@ -367,6 +368,20 @@ function validateProduct(
             'row' => $rowNumber,
             'column' => 'opis',
             'message' => 'Opis musi być poprawną strukturą JSON.',
+        ];
+
+        $valid = false;
+    }
+
+    if (
+        isset($product['parametry'])
+        && $product['parametry'] !== null
+        && !is_array($product['parametry'])
+    ) {
+        $errors[] = [
+            'row' => $rowNumber,
+            'column' => 'parametry',
+            'message' => 'Parametry muszą być tablicą JSON.',
         ];
 
         $valid = false;

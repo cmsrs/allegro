@@ -10,12 +10,14 @@
     "products": [
         {
             "id": "213189981",
-            "nazwa": "perfumy cmsRS",
+            "nazwa": "Perfumy cmsRS 30 ml",
             "kategoria": "Uroda / Perfumy i wody / Zapachy unisex / Wody perfumowane",
             "sku": null,
             "ean": "8684266587455",
             "cena": 179.99,
             "cena_sprzedazy": 177,
+            "marka": "Clive&Keira",
+            "pojemnosc": "30 ml",
             "zdjecia": [
                 {
                     "name" : "test1.jpg"
@@ -24,12 +26,16 @@
         },
         {
             "id": "213189999",
-            "nazwa": "odswiezacz powietrza cmsRS",
+            "nazwa": "Odświeżacz powietrza cmsRS 30 ml",
             "kategoria":   "Supermarket / Utrzymanie czystości / Odświeżacze powietrza",
             "sku": null,
-            "ean": "8684266587499",
+            "ean": "8684266587493",
             "cena": 79.99,
             "cena_sprzedazy": 77,
+            "marka": "bez marki",
+            "pojemnosc": "30 ml",
+            "rodzaj": "spray (aerozol)",
+            "nazwa_handlowa": "Odświeżacz powietrza cmsRS",
             "zdjecia": [
                 {
                     "name" : "test3.jpg"

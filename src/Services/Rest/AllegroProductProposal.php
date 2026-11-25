@@ -34,6 +34,7 @@ class AllegroProductProposal
     {
         $categoriesCatalog = $this->readJson($catalogDirectory . '/kategorie_allegro.json');
         $parametersCatalog = $this->readJson($catalogDirectory . '/parametry_produktowe_kategorii_allegro.json');
+        $offerParametersCatalog = $this->readJson($catalogDirectory . '/parametry_kategorii_allegro.json');
 
         $sourceCategory = trim((string) ($product['kategoria'] ?? ''));
         $categoryId = trim((string) ($product['allegro_category_id'] ?? ''));
@@ -66,7 +67,22 @@ class AllegroProductProposal
             $categoryParameters = [];
         }
 
+        $offerParameterOptions = [];
+        foreach ($offerParametersCatalog['categories'] ?? [] as $category) {
+            if (!is_array($category) || (string) ($category['id'] ?? '') !== $categoryId) {
+                continue;
+            }
+
+            foreach ($category['parameters'] ?? [] as $parameter) {
+                if (is_array($parameter) && isset($parameter['id'])) {
+                    $offerParameterOptions[(string) $parameter['id']] = $parameter['options'] ?? [];
+                }
+            }
+            break;
+        }
+
         $parameters = $this->normalizeProductParameters($product['parametry'] ?? $product['parameters'] ?? []);
+        $parameters = $this->appendHumanReadableParameters($parameters, $product, $categoryParameters, $offerParameterOptions);
         $ean = trim((string) ($product['ean'] ?? ''));
         if ($ean !== '') {
             $gtinParameterId = '225693';
@@ -94,6 +110,34 @@ class AllegroProductProposal
             }
         }
 
+        $providedParameterIds = [];
+        foreach ($parameters as $parameter) {
+            $values = $parameter['values'] ?? $parameter['valuesIds'] ?? $parameter['rangeValue'] ?? null;
+            if ($values !== null && $values !== '' && $values !== []) {
+                $providedParameterIds[(string) ($parameter['id'] ?? '')] = true;
+            }
+        }
+
+        $missingRequiredParameters = [];
+        foreach ($categoryParameters as $parameter) {
+            if (!is_array($parameter) || empty($parameter['required'])) {
+                continue;
+            }
+
+            $parameterId = trim((string) ($parameter['id'] ?? ''));
+            if ($parameterId !== '' && !isset($providedParameterIds[$parameterId])) {
+                $missingRequiredParameters[] = (string) ($parameter['name'] ?? $parameterId);
+            }
+        }
+
+        if ($missingRequiredParameters !== []) {
+            throw new RuntimeException(sprintf(
+                'Brakuje wymaganych parametrów produktu (kategoria %s): %s. Uzupełnij czytelne pola produktu, np. "marka" i "pojemnosc"; pozostałe parametry możesz podać w polu "parametry".',
+                $categoryId,
+                implode(', ', $missingRequiredParameters)
+            ));
+        }
+
         $images = [];
         foreach ($imageLocations as $location) {
             $location = trim($location);
@@ -108,6 +152,14 @@ class AllegroProductProposal
         $name = trim((string) ($product['nazwa'] ?? ''));
         if ($name === '') {
             throw new RuntimeException('Nazwa produktu jest wymagana do utworzenia propozycji.');
+        }
+        $nameWordCount = preg_match_all('/\S+/u', $name);
+        if ($nameWordCount === false || $nameWordCount < 3) {
+            throw new RuntimeException(sprintf(
+                'Nazwa produktu musi zawierać co najmniej 3 wyrazy (obecnie: %d): %s',
+                max(0, $nameWordCount ?: 0),
+                $name
+            ));
         }
         $nameLength = function_exists('mb_strlen') ? mb_strlen($name) : strlen($name);
         if ($nameLength > 75) {
@@ -149,6 +201,171 @@ class AllegroProductProposal
             'product' => $createdProduct,
             'product_error' => $productError,
         ];
+    }
+
+    /**
+     * Maps readable product fields such as "marka" and "pojemnosc" to the
+     * parameter IDs and dictionary value IDs required by Allegro.
+     *
+     * @param list<array<string, mixed>> $parameters
+     * @param array<string, mixed> $product
+     * @param list<array<string, mixed>> $categoryParameters
+     * @param array<string, array<string, mixed>> $offerParameterOptions
+     * @return list<array<string, mixed>>
+     */
+    private function appendHumanReadableParameters(array $parameters, array $product, array $categoryParameters, array $offerParameterOptions): array
+    {
+        $existingIds = [];
+        foreach ($parameters as $parameter) {
+            $existingIds[(string) ($parameter['id'] ?? '')] = true;
+        }
+
+        $brand = trim((string) ($product['marka'] ?? ''));
+        $capacity = trim((string) ($product['pojemnosc'] ?? $product['pojemonsc'] ?? ''));
+        $kind = trim((string) ($product['rodzaj'] ?? ''));
+        $tradeName = trim((string) ($product['nazwa_handlowa'] ?? ''));
+
+        $selectedBrandValueId = null;
+        if ($brand !== '') {
+            foreach ($categoryParameters as $categoryParameter) {
+                if (!is_array($categoryParameter) || $this->normalizeText((string) ($categoryParameter['name'] ?? '')) !== 'marka') {
+                    continue;
+                }
+
+                $selectedBrandValueId = $this->findDictionaryValue($categoryParameter['dictionary'] ?? [], $brand);
+                if ($selectedBrandValueId === null) {
+                    $selectedBrandValueId = $this->findDictionaryValue($categoryParameter['dictionary'] ?? [], 'bez marki');
+                }
+                break;
+            }
+        }
+
+        foreach ($categoryParameters as $categoryParameter) {
+            if (!is_array($categoryParameter)) {
+                continue;
+            }
+
+            $parameterId = trim((string) ($categoryParameter['id'] ?? ''));
+            $parameterName = $this->normalizeText((string) ($categoryParameter['name'] ?? ''));
+            if ($parameterId === '' || isset($existingIds[$parameterId])) {
+                continue;
+            }
+
+            if ($brand !== '' && $parameterName === 'marka') {
+                if ($selectedBrandValueId === null) {
+                    throw new RuntimeException(sprintf(
+                        'Nie znaleziono marki "%s" ani wartości zastępczej "bez marki" w słowniku Allegro dla parametru Marka (ID %s).',
+                        $brand,
+                        $parameterId
+                    ));
+                }
+
+                $parameters[] = ['id' => $parameterId, 'valuesIds' => [$selectedBrandValueId]];
+                $existingIds[$parameterId] = true;
+                continue;
+            }
+
+            if ($kind !== '' && $parameterName === 'rodzaj') {
+                $kindValue = $this->findDictionaryValue($categoryParameter['dictionary'] ?? [], $kind);
+                if ($kindValue === null) {
+                    throw new RuntimeException(sprintf('Nie znaleziono rodzaju "%s" w słowniku Allegro dla kategorii produktu.', $kind));
+                }
+
+                $parameters[] = ['id' => $parameterId, 'valuesIds' => [$kindValue]];
+                $existingIds[$parameterId] = true;
+                continue;
+            }
+
+            if ($tradeName !== '' && $parameterName === 'nazwahandlowa') {
+                $options = $offerParameterOptions[$parameterId] ?? [];
+                $ambiguousValueId = trim((string) ($options['ambiguousValueId'] ?? ''));
+                if (!empty($options['customValuesEnabled']) && $ambiguousValueId !== '') {
+                    $availableAmbiguousValueId = $this->findDictionaryValue(
+                        $categoryParameter['dictionary'] ?? [],
+                        'inna',
+                        $selectedBrandValueId
+                    );
+                    if ($availableAmbiguousValueId !== $ambiguousValueId) {
+                        throw new RuntimeException(sprintf(
+                            'Wartość niejednoznaczna dla parametru "%s" nie jest dostępna dla wybranej marki.',
+                            $categoryParameter['name'] ?? $parameterId
+                        ));
+                    }
+
+                    $parameters[] = [
+                        'id' => $parameterId,
+                        'valuesIds' => [$ambiguousValueId],
+                        'values' => [$tradeName],
+                    ];
+                } else {
+                    $tradeNameValue = $this->findDictionaryValue(
+                        $categoryParameter['dictionary'] ?? [],
+                        $tradeName,
+                        $selectedBrandValueId
+                    );
+                    if ($tradeNameValue === null) {
+                        throw new RuntimeException(sprintf('Nie znaleziono nazwy handlowej "%s" pasującej do marki w słowniku Allegro.', $tradeName));
+                    }
+
+                    $parameters[] = ['id' => $parameterId, 'valuesIds' => [$tradeNameValue]];
+                }
+
+                $existingIds[$parameterId] = true;
+                continue;
+            }
+
+            if ($capacity !== '' && str_starts_with($parameterName, 'pojemnosc')) {
+                $numericCapacity = preg_replace('/\s*(ml)?\s*$/iu', '', str_replace(',', '.', $capacity));
+                if ($numericCapacity === null || !is_numeric(trim($numericCapacity))) {
+                    throw new RuntimeException(sprintf('Nieprawidłowa pojemność "%s". Podaj liczbę z opcjonalną jednostką ml.', $capacity));
+                }
+
+                $parameters[] = ['id' => $parameterId, 'values' => [rtrim(rtrim(number_format((float) trim($numericCapacity), 2, '.', ''), '0'), '.')]];
+                $existingIds[$parameterId] = true;
+            }
+        }
+
+        return $parameters;
+    }
+
+    /**
+     * @param mixed $dictionary
+     */
+    private function findDictionaryValue(mixed $dictionary, string $label, ?string $dependsOnValueId = null): ?string
+    {
+        if (!is_array($dictionary)) {
+            return null;
+        }
+
+        $normalizedLabel = $this->normalizeText($label);
+        foreach ($dictionary as $option) {
+            if (!is_array($option) || $this->normalizeText((string) ($option['value'] ?? '')) !== $normalizedLabel) {
+                continue;
+            }
+
+            $dependencies = array_map('strval', $option['dependsOnValueIds'] ?? []);
+            if ($dependsOnValueId !== null && $dependencies !== [] && !in_array($dependsOnValueId, $dependencies, true)) {
+                continue;
+            }
+
+            $valueId = trim((string) ($option['id'] ?? ''));
+            if ($valueId !== '') {
+                return $valueId;
+            }
+        }
+
+        return null;
+    }
+
+    private function normalizeText(string $value): string
+    {
+        $value = mb_strtolower(trim($value), 'UTF-8');
+        $value = strtr($value, [
+            'ą' => 'a', 'ć' => 'c', 'ę' => 'e', 'ł' => 'l', 'ń' => 'n',
+            'ó' => 'o', 'ś' => 's', 'ź' => 'z', 'ż' => 'z',
+        ]);
+
+        return preg_replace('/[^a-z0-9]+/', '', $value) ?? '';
     }
 
     /**
