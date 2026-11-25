@@ -54,6 +54,67 @@ Testy pozwalają sprawdzić poprawność działania poszczególnych elementów a
 
 ## 4. Operacje na produktach Allegro - Automatyzacja procesu importu produktów na podstawie pliku: ./produkty/dane.json
 
+przykład pliku dane.json
+
+```bash
+$ cat  produkty/dane.json 
+{
+    "version": 1,
+    "generated_at": "2026-11-21T13:26:18+00:00",
+    "source": "dane.xlsx",
+    "summary": {
+        "total": 1,
+        "imported": 1,
+        "errors": 0
+    },
+    "products": [
+        {
+            "id": "213189981",
+            "nazwa": "Perfumy cmsRS 30 ml",
+            "kategoria": "Uroda / Perfumy i wody / Zapachy unisex / Wody perfumowane",
+            "sku": null,
+            "ean": "8684266587455",
+            "cena": 179.99,
+            "cena_sprzedazy": 177,
+            "stan_magazynowy": 1,
+            "marka": "Clive&Keira",
+            "pojemnosc": "30 ml",
+            "allegro_shipping_rate_id": "2bade2fb-e283-4ae7-8af7-8a32051f7003",
+            "allegro_responsible_producer_id": "2d0a3849-7ae5-40b6-9e11-bb677c249065",
+            "zdjecia": [
+                {
+                    "name" : "test1.jpg"
+                }
+            ]
+        },
+        {
+            "id": "213189999",
+            "nazwa": "Odświeżacz powietrza cmsRS 30 ml",
+            "kategoria":   "Supermarket / Utrzymanie czystości / Odświeżacze powietrza",
+            "sku": null,
+            "ean": "8684266587493",
+            "cena": 79.99,
+            "cena_sprzedazy": 77,
+            "stan_magazynowy": 1,
+            "marka": "bez marki",
+            "pojemnosc": "30 ml",
+            "rodzaj": "spray (aerozol)",
+            "nazwa_handlowa": "Odświeżacz powietrza cmsRS",
+            "allegro_shipping_rate_id": "2bade2fb-e283-4ae7-8af7-8a32051f7003",
+            "allegro_responsible_producer_id": "2d0a3849-7ae5-40b6-9e11-bb677c249065",
+            "zdjecia": [
+                {
+                    "name" : "test3.jpg"
+                }
+            ]
+        }
+
+
+    ]
+}
+
+```
+
 ### dane producenta: dodaj firme i osobe odpowiedzialna oraz uzupełnij cennik dostawy
 
 ### utworzenie słowników w ./dane : 
