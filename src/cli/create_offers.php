@@ -6,6 +6,7 @@ use App\Services\GetProductsData;
 use App\AllegroOAuth;
 use App\Services\Rest\AllegroImageUploader;
 use App\Services\Rest\AllegroProductFinder;
+use App\Services\Rest\AllegroProductOffer;
 use App\Services\Rest\AllegroProductProposal;
 use App\Services\Rest\CategoryDetailsJsonWriter;
 
@@ -22,11 +23,14 @@ try {
     $accessToken = $oauth->getAccessToken();
     $productFinder = new AllegroProductFinder($config['api_url'], $accessToken);
     $imageUploader = new AllegroImageUploader($config['upload_url'], $accessToken);
+    $productOffer = new AllegroProductOffer($config['api_url'], $accessToken);
     $productProposal = new AllegroProductProposal($config['api_url'], $accessToken);
     $imagesDirectory = dirname(__DIR__, 2) . '/produkty';
     $catalogDirectory = dirname(__DIR__, 2) . '/dane';
     $imagesManifestPath = dirname(__DIR__, 2) . '/dane/allegro_uploaded_images.json';
+    $offersManifestPath = $catalogDirectory . '/allegro_created_offers.json';
     $uploadedImages = [];
+    $createdOffers = [];
 
     if (is_file($imagesManifestPath)) {
         $savedManifest = json_decode((string) file_get_contents($imagesManifestPath), true, 512, JSON_THROW_ON_ERROR);
@@ -34,6 +38,14 @@ try {
             throw new RuntimeException('Nieprawidłowy plik rejestru zdjęć: ' . $imagesManifestPath);
         }
         $uploadedImages = $savedManifest['images'];
+    }
+
+    if (is_file($offersManifestPath)) {
+        $savedOffersManifest = json_decode((string) file_get_contents($offersManifestPath), true, 512, JSON_THROW_ON_ERROR);
+        if (!is_array($savedOffersManifest) || !is_array($savedOffersManifest['offers'] ?? null)) {
+            throw new RuntimeException('Nieprawidłowy plik rejestru ofert: ' . $offersManifestPath);
+        }
+        $createdOffers = $savedOffersManifest['offers'];
     }
 
     foreach ($products as $product) {
@@ -53,6 +65,8 @@ try {
         echo sprintf("Sprawdzam EAN %s | %s...\n", $ean, $productName);
         echo "API: GET /sale/products?phrase=EAN&mode=GTIN	Wyszukiwanie produktu po EAN\n";
         $matches = $productFinder->findByEan($ean);
+        $catalogProductId = null;
+        $catalogProductImages = [];
 
         if ($matches === []) {
             echo sprintf("NIE ZNALEZIONO produktu w katalogu Allegro dla EAN %s.\n", $ean);
@@ -139,21 +153,77 @@ try {
                 if ($proposalResult['product'] !== null) {
                     echo "Odpowiedź GET /sale/products/{$proposalResult['proposal']['id']}:\n";
                     echo json_encode($proposalResult['product'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL;
+                    $catalogProductImages = $proposalResult['product']['images'] ?? [];
                 } else {
                     echo "Nie udało się od razu pobrać produktu przez GET: {$proposalResult['product_error']}\n";
                 }
+
+                $catalogProductId = trim((string) ($proposalResult['proposal']['id'] ?? ''));
+            }
+        } else {
+            echo sprintf("ZNALEZIONO produkt w katalogu Allegro dla EAN %s:\n", $ean);
+            foreach ($matches as $match) {
+                echo sprintf(
+                    "  ID: %s | Nazwa: %s\n",
+                    $match['id'] ?? 'brak',
+                    $match['name'] ?? 'brak'
+                );
             }
 
+            $catalogProductId = trim((string) ($matches[0]['id'] ?? ''));
+            $catalogProductImages = $matches[0]['images'] ?? [];
+        }
+
+        if ($catalogProductId === null || $catalogProductId === '') {
+            echo sprintf("POMINIĘTO | %s | nie uzyskano ID produktu Allegro.\n", $productName);
             continue;
         }
 
-        echo sprintf("ZNALEZIONO produkt w katalogu Allegro dla EAN %s:\n", $ean);
-        foreach ($matches as $match) {
-            echo sprintf(
-                "  ID: %s | Nazwa: %s\n",
-                $match['id'] ?? 'brak',
-                $match['name'] ?? 'brak'
-            );
+        $registeredOffer = null;
+        foreach (array_reverse($createdOffers) as $savedOffer) {
+            if (is_array($savedOffer)
+                && (string) ($savedOffer['product_id'] ?? '') === $catalogProductId
+                && trim((string) ($savedOffer['offer_id'] ?? '')) !== ''
+            ) {
+                $registeredOffer = $savedOffer;
+                break;
+            }
+        }
+
+        if ($registeredOffer !== null) {
+            $offerId = (string) $registeredOffer['offer_id'];
+            echo sprintf("API: GET /sale/product-offers/%s\tKontrola zapisanej oferty\n", $offerId);
+            $existingOffer = $productOffer->getById($offerId);
+            echo sprintf("Oferta już istnieje. ID: %s\n", $offerId);
+            echo json_encode($existingOffer, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL;
+            continue;
+        }
+
+        echo "API: POST /sale/product-offers\tUtworzenie szkicu oferty\n";
+        $offerResult = $productOffer->createFromProduct($product, $catalogProductId, $catalogDirectory, $catalogProductImages);
+        $offerId = $offerResult['offer_id'];
+
+        $createdOffers[] = [
+            'ean' => $ean,
+            'product_name' => $productName,
+            'product_id' => $catalogProductId,
+            'offer_id' => $offerId,
+            'created_at' => date(DATE_ATOM),
+            'publication_status' => $offerResult['offer']['publication']['status'] ?? 'INACTIVE',
+        ];
+        (new CategoryDetailsJsonWriter())->write($offersManifestPath, [
+            'generated_at' => date(DATE_ATOM),
+            'count' => count($createdOffers),
+            'offers' => $createdOffers,
+        ]);
+
+        echo sprintf("Utworzono ofertę. ID oferty: %s\n", $offerId);
+        echo sprintf("Rejestr ofert zapisano w: %s\n", $offersManifestPath);
+        if ($offerResult['verification'] !== null) {
+            echo "API: GET /sale/product-offers/{$offerId}\tKontrola utworzonej oferty\n";
+            echo json_encode($offerResult['verification'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL;
+        } else {
+            echo sprintf("Nie udało się pobrać oferty do kontroli: %s\n", $offerResult['verification_error']);
         }
     }
 } catch (Throwable $e) {

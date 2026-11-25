@@ -16,6 +16,7 @@
             "ean": "8684266587455",
             "cena": 179.99,
             "cena_sprzedazy": 177,
+            "stan_magazynowy": 1,
             "marka": "Clive&Keira",
             "pojemnosc": "30 ml",
             "zdjecia": [
@@ -32,6 +33,7 @@
             "ean": "8684266587493",
             "cena": 79.99,
             "cena_sprzedazy": 77,
+            "stan_magazynowy": 1,
             "marka": "bez marki",
             "pojemnosc": "30 ml",
             "rodzaj": "spray (aerozol)",
