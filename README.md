@@ -54,7 +54,7 @@ Testy pozwalają sprawdzić poprawność działania poszczególnych elementów a
 
 ## 4. Operacje na produktach Allegro - Automatyzacja procesu importu produktów na podstawie pliku: ./produkty/dane.json
 
-### dane producenta: dodaj firme i osobe odpowiedzialna
+### dane producenta: dodaj firme i osobe odpowiedzialna oraz uzupełnij cennik dostawy
 
 ### utworzenie słowników w ./dane : 
 
@@ -92,7 +92,7 @@ Zapisano JSON: /home/rob/allegro/allegro/dane/parametry_produktowe_kategorii_all
 
 /home/rob/allegro/allegro/src/cli/dictionaries/fetch_shipping_rates.php
 API: GET /sale/shipping-rates
-Pobrano cenników dostawy: 11
+Pobrano cenników dostawy: 12
 Zapisano JSON: /home/rob/allegro/allegro/dane/cenniki_dostawy_allegro.json
 
 /home/rob/allegro/allegro/src/cli/dictionaries/fetch_return_policies.php
@@ -121,3 +121,494 @@ Zapisano JSON: /home/rob/allegro/allegro/dane/osoby_odpowiedzialne_allegro.json
 ```bash
 ./create_offers.sh
 ```
+
+przykładowe wywołanie:
+
+```bash
+/home/rob/allegro/allegro/src/cli/create_offers.php
+
+Sprawdzam EAN 8684266587455 | Perfumy cmsRS 30 ml...
+API: GET /sale/products?phrase=EAN&mode=GTIN	Wyszukiwanie produktu po EAN
+ZNALEZIONO produkt w katalogu Allegro dla EAN 8684266587455:
+  ID: 6a622b2c-5236-4cbf-818d-9b6451ea65fb | Nazwa: Perfumy cmsRS 30 ml
+API: POST /sale/product-offers	Utworzenie szkicu oferty
+Utworzono ofertę. ID oferty: 7782592481
+Rejestr ofert zapisano w: /home/rob/allegro/allegro/dane/allegro_created_offers.json
+API: GET /sale/product-offers/7782592481	Kontrola utworzonej oferty
+{
+    "name": "Perfumy cmsRS 30 ml",
+    "productSet": [
+        {
+            "product": {
+                "id": "6a622b2c-5236-4cbf-818d-9b6451ea65fb",
+                "publication": {
+                    "status": "LISTED"
+                },
+                "parameters": [
+                    {
+                        "id": "248811",
+                        "name": "Marka",
+                        "values": [
+                            "Clive&Keira"
+                        ],
+                        "valuesIds": [
+                            "248811_2007350"
+                        ],
+                        "rangeValue": null
+                    },
+                    {
+                        "id": "219893",
+                        "name": "Pojemność opakowania",
+                        "values": [
+                            "30"
+                        ],
+                        "valuesIds": null,
+                        "rangeValue": null
+                    },
+                    {
+                        "id": "250792",
+                        "name": "Kod taryfy celnej",
+                        "values": [
+                            "33030010"
+                        ],
+                        "valuesIds": null,
+                        "rangeValue": null
+                    },
+                    {
+                        "id": "225693",
+                        "name": "EAN (GTIN)",
+                        "values": [
+                            "8684266587455"
+                        ],
+                        "valuesIds": null,
+                        "rangeValue": null
+                    }
+                ],
+                "isAiCoCreated": true
+            },
+            "quantity": {
+                "value": 1
+            },
+            "responsiblePerson": null,
+            "responsibleProducer": {
+                "id": "2d0a3849-7ae5-40b6-9e11-bb677c249065"
+            },
+            "safetyInformation": {
+                "description": "Lista ostrzeżeń dotyczących bezpieczeństwa dotyczących wód perfumowanych (zapachy unisex) oparta o wymagania Rozporządzenia (UE) 2023/988 w sprawie ogólnego bezpieczeństwa produktów (GPSR):\n\n1.  Ryzyko podrażnienia skóry: Przed pierwszym użyciem wykonaj test na małym obszarze skóry, aby upewnić się, że nie wystąpi reakcja alergiczna. Unikaj stosowania na uszkodzoną lub podrażnioną skórę.\n2.  Łatwopalność: Produkt zawiera alkohol, który jest substancją łatwopalną. Trzymaj z dala od źródeł ognia i ciepła. Nie rozpylaj w pobliżu otwartego ognia lub innych źródeł zapłonu.\n3.  Unikaj kontaktu z oczami: W przypadku kontaktu z oczami, natychmiast przemyj dużą ilością wody. W razie utrzymującego się podrażnienia, skonsultuj się z lekarzem.\n4.  Przechowywanie: Przechowuj w chłodnym, suchym miejscu, z dala od bezpośredniego światła słonecznego i źródeł ciepła.\n5.  Utylizacja: Nie wyrzucaj pustych opakowań do ognia. Postępuj zgodnie z lokalnymi przepisami dotyczącymi utylizacji odpadów.\n6.  Użycie zewnętrzne: Produkt przeznaczony jest wyłącznie do użytku zewnętrznego. Nie spożywaj.\n7.  Trzymaj poza zasięgiem dzieci: Produkt nie jest przeznaczony dla dzieci. Trzymaj z dala od dzieci, aby uniknąć przypadkowego spożycia lub rozpylenia w oczy.\n8.  Wrażliwość na światło: Niektóre składniki mogą powodować zwiększoną wrażliwość skóry na światło słoneczne. Unikaj ekspozycji na słońce bezpośrednio po użyciu.\n9.  Zmiana koloru: Zwróć uwagę, że perfumy mogą z czasem zmieniać kolor.",
+                "type": "TEXT"
+            },
+            "marketedBeforeGPSRObligation": false,
+            "deposits": [],
+            "composition": null
+        }
+    ],
+    "parameters": [
+        {
+            "id": "11323",
+            "name": "Stan",
+            "values": [
+                "Nowy"
+            ],
+            "valuesIds": [
+                "11323_1"
+            ],
+            "rangeValue": null
+        }
+    ],
+    "images": [
+        "https://a.allegroimg.allegrosandbox.pl/original/1184e3/0ac837a34df08378a5c02a2573ff"
+    ],
+    "afterSalesServices": {
+        "impliedWarranty": {
+            "id": "5c902a37-9b9a-406d-918c-9500dc7539ff"
+        },
+        "returnPolicy": {
+            "id": "0d394739-d6c6-4aec-8abe-1159cc82a2e2"
+        },
+        "warranty": null
+    },
+    "payments": {
+        "invoice": "VAT"
+    },
+    "sellingMode": {
+        "format": "BUY_NOW",
+        "price": {
+            "amount": "177.00",
+            "currency": "PLN"
+        },
+        "startingPrice": null,
+        "minimalPrice": null
+    },
+    "stock": {
+        "available": 1,
+        "unit": "UNIT"
+    },
+    "location": {
+        "countryCode": "PL",
+        "province": "MAZOWIECKIE",
+        "city": "WARSZAWA",
+        "postCode": "01-493"
+    },
+    "delivery": {
+        "shippingRates": {
+            "id": "2bade2fb-e283-4ae7-8af7-8a32051f7003"
+        },
+        "handlingTime": "PT24H",
+        "additionalInfo": null,
+        "shipmentDate": null
+    },
+    "description": {
+        "sections": [
+            {
+                "items": [
+                    {
+                        "type": "TEXT",
+                        "content": "<p></p>"
+                    }
+                ]
+            }
+        ]
+    },
+    "external": null,
+    "category": {
+        "id": "319286"
+    },
+    "taxSettings": null,
+    "sizeTable": null,
+    "discounts": {
+        "wholesalePriceList": null
+    },
+    "contact": null,
+    "fundraisingCampaign": null,
+    "messageToSellerSettings": {
+        "mode": "OPTIONAL"
+    },
+    "attachments": [],
+    "b2b": null,
+    "additionalServices": null,
+    "compatibilityList": null,
+    "additionalMarketplaces": {
+        "allegro-business-pl": {
+            "sellingMode": {
+                "price": {
+                    "amount": "177.00",
+                    "currency": "PLN"
+                }
+            },
+            "publication": {
+                "state": "NOT_REQUESTED",
+                "refusalReasons": []
+            }
+        },
+        "allegro-sk": {
+            "sellingMode": null,
+            "publication": {
+                "state": "NOT_REQUESTED",
+                "refusalReasons": []
+            }
+        },
+        "allegro-cz": {
+            "sellingMode": null,
+            "publication": {
+                "state": "NOT_REQUESTED",
+                "refusalReasons": []
+            }
+        },
+        "allegro-hu": {
+            "sellingMode": null,
+            "publication": {
+                "state": "NOT_REQUESTED",
+                "refusalReasons": []
+            }
+        },
+        "allegro-business-cz": {
+            "sellingMode": null,
+            "publication": {
+                "state": "NOT_REQUESTED",
+                "refusalReasons": []
+            }
+        }
+    },
+    "warnings": [],
+    "aiCoCreatedContent": {
+        "images": []
+    },
+    "id": "7782592481",
+    "language": "pl-PL",
+    "publication": {
+        "status": "INACTIVE",
+        "duration": null,
+        "endedBy": null,
+        "endingAt": null,
+        "startingAt": null,
+        "republish": false,
+        "marketplaces": {
+            "base": {
+                "id": "allegro-pl"
+            },
+            "additional": []
+        }
+    },
+    "validation": {
+        "errors": [],
+        "warnings": [],
+        "validatedAt": "2026-11-25T11:50:53.144Z"
+    },
+    "createdAt": "2026-11-25T11:50:53.000Z",
+    "updatedAt": "2026-11-25T11:50:53.155Z"
+}
+
+Sprawdzam EAN 8684266587493 | Odświeżacz powietrza cmsRS 30 ml...
+API: GET /sale/products?phrase=EAN&mode=GTIN	Wyszukiwanie produktu po EAN
+ZNALEZIONO produkt w katalogu Allegro dla EAN 8684266587493:
+  ID: a642de97-862f-4527-9bc4-7191b21086ed | Nazwa: Odświeżacz powietrza cmsRS 30 ml
+API: POST /sale/product-offers	Utworzenie szkicu oferty
+Utworzono ofertę. ID oferty: 7782592482
+Rejestr ofert zapisano w: /home/rob/allegro/allegro/dane/allegro_created_offers.json
+API: GET /sale/product-offers/7782592482	Kontrola utworzonej oferty
+{
+    "name": "Odświeżacz powietrza cmsRS 30 ml",
+    "productSet": [
+        {
+            "product": {
+                "id": "a642de97-862f-4527-9bc4-7191b21086ed",
+                "publication": {
+                    "status": "LISTED"
+                },
+                "parameters": [
+                    {
+                        "id": "248811",
+                        "name": "Marka",
+                        "values": [
+                            "bez marki"
+                        ],
+                        "valuesIds": [
+                            "248811_958954"
+                        ],
+                        "rangeValue": null
+                    },
+                    {
+                        "id": "226873",
+                        "name": "Rodzaj",
+                        "values": [
+                            "spray (aerozol)"
+                        ],
+                        "valuesIds": [
+                            "226873_317857"
+                        ],
+                        "rangeValue": null
+                    },
+                    {
+                        "id": "250594",
+                        "name": "Nazwa handlowa",
+                        "values": [
+                            "Odświeżacz powietrza cmsRS"
+                        ],
+                        "valuesIds": [
+                            "250594_1936370"
+                        ],
+                        "rangeValue": null
+                    },
+                    {
+                        "id": "226901",
+                        "name": "Pojemność",
+                        "values": [
+                            "30"
+                        ],
+                        "valuesIds": null,
+                        "rangeValue": null
+                    },
+                    {
+                        "id": "250792",
+                        "name": "Kod taryfy celnej",
+                        "values": [
+                            "33074900"
+                        ],
+                        "valuesIds": null,
+                        "rangeValue": null
+                    },
+                    {
+                        "id": "225693",
+                        "name": "EAN (GTIN)",
+                        "values": [
+                            "8684266587493"
+                        ],
+                        "valuesIds": null,
+                        "rangeValue": null
+                    }
+                ],
+                "isAiCoCreated": true
+            },
+            "quantity": {
+                "value": 1
+            },
+            "responsiblePerson": null,
+            "responsibleProducer": {
+                "id": "2d0a3849-7ae5-40b6-9e11-bb677c249065"
+            },
+            "safetyInformation": {
+                "description": "Lista ostrzeżeń dotyczących bezpieczeństwa odświeżaczy powietrza oparta o wymagania Rozporządzenia (UE) 2023/988 w sprawie ogólnego bezpieczeństwa produktów (GPSR):\n\n1.  Zagrożenie dla zdrowia: Nie wdychaj bezpośrednio oparów odświeżacza. Może to powodować podrażnienie dróg oddechowych lub alergie.\n2.  Kontakt ze skórą i oczami: Unikaj kontaktu odświeżacza ze skórą i oczami. W razie kontaktu przemyj obficie wodą.\n3.  Dzieci i zwierzęta: Trzymaj odświeżacze poza zasięgiem dzieci i zwierząt. Połknięcie może być szkodliwe.\n4.  Źródła ognia: Nie rozpylaj odświeżaczy w pobliżu otwartego ognia lub innych źródeł zapłonu. Odświeżacze mogą zawierać łatwopalne składniki.\n5.  Wentylacja: Używaj odświeżaczy w dobrze wentylowanych pomieszczeniach. Długotrwałe wdychanie oparów w zamkniętych pomieszczeniach może być niebezpieczne.\n6.  Przechowywanie: Przechowuj odświeżacze w chłodnym, suchym miejscu, z dala od bezpośredniego działania promieni słonecznych i źródeł ciepła.\n7.  Powierzchnie: Nie rozpylaj odświeżaczy bezpośrednio na meble, tkaniny lub inne powierzchnie. Mogą one powodować plamy lub uszkodzenia.\n8.  Recykling: Puste opakowania od odświeżaczy oddawaj do recyklingu zgodnie z lokalnymi przepisami.\n9.  Alergie: Jeśli masz skłonność do alergii, sprawdź skład odświeżacza przed użyciem.\n10. Utylizacja: Nie wrzucaj odświeżaczy do ognia. Opakowania pod ciśnieniem mogą eksplodować.",
+                "type": "TEXT"
+            },
+            "marketedBeforeGPSRObligation": false,
+            "deposits": [],
+            "composition": null
+        }
+    ],
+    "parameters": [
+        {
+            "id": "11323",
+            "name": "Stan",
+            "values": [
+                "Nowy"
+            ],
+            "valuesIds": [
+                "11323_1"
+            ],
+            "rangeValue": null
+        }
+    ],
+    "images": [
+        "https://a.allegroimg.allegrosandbox.pl/original/11342c/e2bfafd645e29abe6b26288ffd6f"
+    ],
+    "afterSalesServices": {
+        "impliedWarranty": {
+            "id": "5c902a37-9b9a-406d-918c-9500dc7539ff"
+        },
+        "returnPolicy": {
+            "id": "0d394739-d6c6-4aec-8abe-1159cc82a2e2"
+        },
+        "warranty": null
+    },
+    "payments": {
+        "invoice": "VAT"
+    },
+    "sellingMode": {
+        "format": "BUY_NOW",
+        "price": {
+            "amount": "77.00",
+            "currency": "PLN"
+        },
+        "startingPrice": null,
+        "minimalPrice": null
+    },
+    "stock": {
+        "available": 1,
+        "unit": "UNIT"
+    },
+    "location": {
+        "countryCode": "PL",
+        "province": "MAZOWIECKIE",
+        "city": "WARSZAWA",
+        "postCode": "01-493"
+    },
+    "delivery": {
+        "shippingRates": {
+            "id": "2bade2fb-e283-4ae7-8af7-8a32051f7003"
+        },
+        "handlingTime": "PT24H",
+        "additionalInfo": null,
+        "shipmentDate": null
+    },
+    "description": {
+        "sections": [
+            {
+                "items": [
+                    {
+                        "type": "TEXT",
+                        "content": "<p></p>"
+                    }
+                ]
+            }
+        ]
+    },
+    "external": null,
+    "category": {
+        "id": "253354"
+    },
+    "taxSettings": null,
+    "sizeTable": null,
+    "discounts": {
+        "wholesalePriceList": null
+    },
+    "contact": null,
+    "fundraisingCampaign": null,
+    "messageToSellerSettings": {
+        "mode": "OPTIONAL"
+    },
+    "attachments": [],
+    "b2b": null,
+    "additionalServices": null,
+    "compatibilityList": null,
+    "additionalMarketplaces": {
+        "allegro-business-pl": {
+            "sellingMode": {
+                "price": {
+                    "amount": "77.00",
+                    "currency": "PLN"
+                }
+            },
+            "publication": {
+                "state": "NOT_REQUESTED",
+                "refusalReasons": []
+            }
+        },
+        "allegro-sk": {
+            "sellingMode": null,
+            "publication": {
+                "state": "NOT_REQUESTED",
+                "refusalReasons": []
+            }
+        },
+        "allegro-cz": {
+            "sellingMode": null,
+            "publication": {
+                "state": "NOT_REQUESTED",
+                "refusalReasons": []
+            }
+        },
+        "allegro-hu": {
+            "sellingMode": null,
+            "publication": {
+                "state": "NOT_REQUESTED",
+                "refusalReasons": []
+            }
+        },
+        "allegro-business-cz": {
+            "sellingMode": null,
+            "publication": {
+                "state": "NOT_REQUESTED",
+                "refusalReasons": []
+            }
+        }
+    },
+    "warnings": [],
+    "aiCoCreatedContent": {
+        "images": []
+    },
+    "id": "7782592482",
+    "language": "pl-PL",
+    "publication": {
+        "status": "INACTIVE",
+        "duration": null,
+        "endedBy": null,
+        "endingAt": null,
+        "startingAt": null,
+        "republish": false,
+        "marketplaces": {
+            "base": {
+                "id": "allegro-pl"
+            },
+            "additional": []
+        }
+    },
+    "validation": {
+        "errors": [],
+        "warnings": [],
+        "validatedAt": "2026-11-25T11:50:56.273Z"
+    },
+    "createdAt": "2026-11-25T11:50:56.000Z",
+    "updatedAt": "2026-11-25T11:50:56.284Z"
+}
+```
+
