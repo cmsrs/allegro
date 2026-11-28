@@ -2,6 +2,12 @@
 
 Projekt umożliwia import produktów oraz ofert sprzedażowych do serwisu Allegro na podstawie danych zapisanych w pliku JSON. Jego zadaniem jest odczytanie, przetworzenie i przygotowanie danych, a następnie utworzenie odpowiednich produktów i ofert na platformie Allegro za pośrednictwem API.
 
+## Zobacz, jak działa skrypt
+
+Przygotowałem krótki film prezentujący działanie aplikacji i proces dodawania produktów oraz ofert na Allegro.
+
+▶️ **[Obejrzyj film na YouTube](https://www.youtube.com/watch?v=ERyEDY0jlQM)**
+
 ## 1. Konfiguracja Allegro OAuth
 
 Po stronie Allegro należy utworzyć aplikację OAuth 2.0 z wykorzystaniem mechanizmu:
